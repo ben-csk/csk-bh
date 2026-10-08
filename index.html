@@ -1,0 +1,722 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CSK Black Hat Report</title>
+<meta name="theme-color" content="#14213D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BH Report">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head><body><title>Black Hat Daily Report</title>
+<style>
+/* Layout: one column, numbered steps top to bottom, one big send button at the end */
+:root{
+  --bg:#EEF1F5; --card:#FFFFFF; --ink:#16233A; --muted:#5B6678; --line:#D0D7E2;
+  --navy:#1F3864; --navy-ink:#FFFFFF; --amber:#F2A900; --amber-ink:#16233A;
+  --ok:#1E7B4A; --ok-bg:#DCF1E4; --bad:#B42318; --bad-bg:#FBE3E0; --soft:#E4E9F1;
+  --display:'Barlow Condensed','Arial Narrow',Arial,sans-serif; --body:'Barlow','Segoe UI',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1724; --card:#18233A; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A3853; --navy:#24457D; --navy-ink:#FFFFFF;
+  --amber:#F2B41F; --amber-ink:#16233A; --ok:#5FD39A; --ok-bg:#163A2A; --bad:#FF8A7A; --bad-bg:#45201C; --soft:#22304A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1724; --card:#18233A; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A3853; --navy:#24457D; --navy-ink:#FFFFFF;
+  --amber:#F2B41F; --amber-ink:#16233A; --ok:#5FD39A; --ok-bg:#163A2A; --bad:#FF8A7A; --bad-bg:#45201C; --soft:#22304A; color-scheme:dark}
+*{box-sizing:border-box} [hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:17px;line-height:1.4;padding-inline:16px;padding-block:0 190px;max-width:600px;margin:0 auto}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.top{background:var(--navy);color:var(--navy-ink);margin-inline:-16px;padding:16px 16px 14px}
+.top h1{font-size:28px;letter-spacing:.3px}
+.top p{margin:4px 0 0;font-size:15px;opacity:.9}
+.top .date{font-family:var(--display);font-size:20px;font-weight:600;margin-top:8px;display:block}
+.langs{display:flex;gap:6px;margin-top:10px}
+.langs button{flex:1;min-height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--navy-ink);font-weight:700}
+.langs button[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.how{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px}
+.how ol{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:2px}
+.step{margin-top:22px}
+.step h2{font-size:23px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.step h2 .n{background:var(--navy);color:var(--navy-ink);border-radius:999px;width:30px;height:30px;display:inline-grid;place-items:center;font-size:17px;flex:none}
+.step .why{font-size:14px;color:var(--muted);margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.f label{display:block;font-weight:700;margin-bottom:5px}
+.f .hint{font-size:13.5px;color:var(--muted);margin:-3px 0 6px}
+.f input,.f textarea,.f select{width:100%;min-height:50px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.f textarea{min-height:80px;resize:vertical}
+.f.miss input,.f.miss textarea,.f.miss .chips button{border-color:var(--bad)}
+.f.miss label{color:var(--bad)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 18px;min-height:48px;font-weight:700;flex:1 1 auto}
+.chips button[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.chips.yn button[data-v="Y"][aria-pressed="true"].warn{background:var(--bad);border-color:var(--bad);color:#fff}
+.unit{display:flex;gap:8px}
+.unit input{flex:1}
+.unit .chips{flex:none}
+.unit .chips button{flex:none;padding:10px 14px}
+.marks{display:flex;flex-direction:column;gap:8px}
+.mark{display:flex;gap:8px}
+.mark input{flex:1;min-height:50px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);text-transform:uppercase}
+.mark button{background:var(--soft);border:0;border-radius:10px;padding:0 14px;font-weight:700}
+.addline{background:none;border:2px dashed var(--line);border-radius:10px;min-height:48px;font-weight:700;color:var(--muted)}
+.sub{border-left:4px solid var(--amber);padding-left:12px;display:flex;flex-direction:column;gap:12px}
+.kept{font-size:13px;color:var(--ok);font-weight:600}
+.sendbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:10}
+.sendbar button{width:100%;max-width:568px;min-height:56px;border:0;border-radius:14px;background:var(--amber);color:var(--amber-ink);font-weight:800;font-size:19px;font-family:var(--display);letter-spacing:.5px}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;padding:0 16px calc(120px + env(safe-area-inset-bottom,0px))}
+.sheet header{position:sticky;top:0;background:var(--navy);color:var(--navy-ink);margin:0 -16px 14px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;display:flex;align-items:center;gap:10px}
+.sheet header h2{flex:1;font-size:24px}
+.sheet header button{background:rgba(255,255,255,.15);border:0;color:var(--navy-ink);border-radius:10px;padding:8px 12px;font-weight:700}
+.inner{max-width:568px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.problems{background:var(--bad-bg);color:var(--bad);border-radius:14px;padding:14px;font-weight:600}
+.problems ul{margin:6px 0 0;padding-left:20px}
+pre.report{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;white-space:pre-wrap;font-family:var(--body);font-size:15.5px;margin:0;user-select:text}
+.big{min-height:56px;border:0;border-radius:14px;font-weight:800;font-size:18px}
+.big.go{background:var(--ok);color:#fff}
+.big.alt{background:var(--soft);color:var(--ink)}
+.steps3{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.steps3 ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:40}
+.restore{margin-top:22px;font-size:14px;color:var(--muted)}
+.restore button{background:none;border:0;color:var(--muted);text-decoration:underline;padding:6px 0}
+</style>
+
+<style>
+.line{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.line .lh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-family:var(--display);font-size:18px}
+.line .lh button{background:var(--soft);border:0;border-radius:8px;padding:6px 10px;font-weight:700;font-size:14px}
+.line select,.line input,.line textarea{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card)}
+.line label{display:block;font-weight:700;font-size:15px;margin-bottom:4px}
+.line .chips button{background:var(--card);padding:8px 12px;min-height:44px;flex:0 1 auto}
+.line .chips button[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.line .chips button[aria-pressed="true"]::before{content:"\2713  "}
+.row3{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.line.miss{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.who button{font-size:14px}
+.step h2{flex-wrap:wrap}
+.st{margin-left:auto;font-family:var(--body);font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.st.ok{background:var(--ok-bg);color:var(--ok)}
+.st.todo{background:#FFF1CC;color:#7A5200}
+.helpbtn{background:rgba(255,255,255,.15);border:0;color:var(--navy-ink);border-radius:10px;padding:8px 14px;font-weight:700;font-size:15px}
+.tophead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.welcome .bigstep{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.welcome .bigstep b{font-family:var(--display);font-size:22px;display:block}
+.welcome .bigstep .n{background:var(--navy);color:var(--navy-ink);border-radius:999px;width:34px;height:34px;display:grid;place-items:center;flex:none;font-weight:800;font-family:var(--display);font-size:18px}
+.welcome .bigstep p{margin:2px 0 0;color:var(--muted);font-size:15px}
+.welcome .langs button{border-color:var(--line);color:var(--ink)}
+
+.datebox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.datebox label{font-weight:700;font-size:15px}
+.datebox input{min-height:46px;border-radius:10px;border:0;padding:6px 10px;font-weight:700;background:#fff;color:#16233A}
+.datebox .date{margin-top:0}
+.late{margin-top:8px;background:var(--amber);color:var(--amber-ink);border-radius:10px;padding:8px 12px;font-weight:700;font-size:15px}
+.f.miss,.line.miss{background:var(--bad-bg)!important;outline:3px solid var(--bad);outline-offset:3px;border-radius:12px}
+.f.miss{padding:8px}
+.missmsg{display:flex;gap:6px;align-items:flex-start;color:var(--bad);font-weight:800;font-size:15px;margin:2px 0 6px}
+.missmsg::before{content:"!";flex:none;width:20px;height:20px;border-radius:50%;background:var(--bad);color:#fff;display:grid;place-items:center;font-size:13px;line-height:1}
+.mach input{width:56px!important;flex:none}
+#missBar{position:fixed;left:0;right:0;bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:11;display:flex;justify-content:center;padding:0 16px}
+#missBar button{width:100%;max-width:568px;min-height:48px;border:0;border-radius:12px;background:var(--bad);color:#fff;font-weight:800;font-size:16px}
+
+.whorow{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 8px;margin-top:8px}
+.whorow.on{border:2px solid var(--navy)}
+.whotick{flex:1;display:flex;align-items:center;gap:10px;background:none;border:0;text-align:left;font-weight:700;font-size:16px;min-height:44px;padding:0}
+.whotick .box{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;flex:none;font-weight:900}
+.whorow.on .whotick .box{background:var(--navy);border-color:var(--navy);color:var(--navy-ink)}
+.hn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:700;margin:0!important}
+.hn input{width:60px!important;min-height:44px;text-align:center;font-size:18px;font-weight:700}
+.whorow.missbox{border:3px solid var(--bad);background:var(--bad-bg)}
+.missbox .whorow{border-color:var(--bad)}
+.hown{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-top:6px}
+.hown span{flex:1;font-weight:700;font-size:14px}
+.hown label{margin:0;font-size:13px;color:var(--muted)}
+.hown input{width:64px!important;min-height:40px;text-align:center}
+.hown.missbox{border:3px solid var(--bad);background:var(--bad-bg)}
+.missbox button{border-color:var(--bad)!important;border-width:2px}
+.machs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.mach{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.mach span{flex:1;font-size:14px;font-weight:600}
+.mach input{width:56px;min-height:40px;border:1px solid var(--line);border-radius:8px;text-align:center;background:var(--card)}
+.mark select{flex:1.2;min-height:50px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg)}
+.mark input{min-width:0}
+.crewsum{font-size:14px;color:var(--muted);font-weight:600}
+.cidle{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.cidle > label{font-weight:700}
+.line.trade{background:var(--card)}
+.whojob{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.jobtick{border:2px solid var(--navy);background:var(--card);color:var(--navy);border-radius:10px;min-height:46px;font-weight:800;text-align:left;padding:8px 12px}
+.jobtick[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink)}
+.delrow{background:var(--soft);border:0;border-radius:10px;padding:10px 14px;font-weight:700;min-height:44px}
+.line.comp > div > select{font-weight:700}
+.tot{background:var(--card);border:2px solid var(--navy);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;color:var(--ink,#14213D);font-size:15px}
+.tot b{display:block;margin-bottom:2px}
+.totbig{font-size:19px;font-weight:800}
+.totrow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 0}
+.nabtn{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:0 14px;font-weight:700;min-height:48px}
+.nabtn[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.f label.mach,.comp label.mach{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0;font-size:14px}
+.comp label.mach span{flex:1;line-height:1.2}
+.comp label.mach input{width:58px;flex:none;min-height:44px;text-align:center;font-size:17px;font-weight:700}
+.permitq{background:#FFF4D6;border:2px solid #F2A900;border-radius:12px;padding:10px 12px;margin-top:10px}
+.permitq > label{font-size:18px}
+.outq{margin-top:0;margin-bottom:12px;display:flex;flex-direction:column;gap:12px}
+.outq .outh{font-family:var(--display);font-weight:800;font-size:19px;color:#7A5200}
+.outq .f > label{font-size:18px}
+.outsum{margin-top:8px;font-weight:800;font-size:15px;color:#14213D}
+.outbox{background:#FFF4D6;border:2px solid #F2A900;border-radius:10px;padding:10px}
+.outbox label{font-weight:800}
+.modebar{display:flex;gap:8px;padding:12px 16px 0}
+.modebar button{flex:1;min-height:64px;border-radius:14px;border:2px solid var(--line);background:var(--card);font-weight:800;font-size:17px;line-height:1.2;padding:6px}
+.modebar button small{display:block;font-weight:600;font-size:13px;opacity:.8}
+.modebar button[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+</style>
+
+<div class="top">
+  <div class="tophead"><h1>Black Hat Daily Report</h1><button class="helpbtn" id="helpBtn">How to use</button></div>
+  <p id="siteLine" data-dyn></p>
+  <div class="datebox"><label for="repDate">Report date</label><input id="repDate" type="date"><span class="date" id="dateLine"></span></div>
+  <div class="late" id="lateNote" hidden>Report for an earlier day. Check the date is right.</div>
+  <div class="langs" role="group" aria-label="Language"><button data-lang="en">English</button><button data-lang="ro">Română</button><button data-lang="pl">Polski</button></div>
+</div>
+
+<div class="modebar" role="group"><button type="button" data-mode="AM">Morning<small>My crew</small></button><button type="button" data-mode="PM">Evening<small>Work done</small></button></div>
+
+<div class="how">
+  <b>How it works</b>
+  <ol>
+    <li>Morning: tap Morning, fill in your crew, Check and send.</li>
+    <li>Evening: tap Evening, fill in the work done, Check and send.</li>
+    <li>Press Send the report, choose WhatsApp and the site manager.</li>
+  </ol>
+</div>
+
+<section class="step">
+  <h2><span class="n">1</span>Me and my crew<span class="st" id="st1" data-dyn></span></h2>
+  <p class="why">Who is on site today.</p>
+  <div class="card">
+    <button type="button" class="addline" id="useLastBtn" hidden>Use my crew from last time</button>
+    <div class="f" data-f="name"><label for="name">Your name</label><input id="name" autocomplete="name"></div>
+    <div class="f" data-f="crew"><label>Crew today</label><div class="hint"><b>One report per team, sent by the lead black hat.</b> Tap the companies in your team. Then type how many of each trade. Leave the rest empty.</div><div class="chips" id="coChips" data-dyn style="margin-bottom:10px"></div>
+      <div id="crewList" data-dyn style="display:flex;flex-direction:column;gap:10px"></div></div>
+    <div class="crewsum" id="crewSum" data-dyn></div>
+  </div>
+</section>
+
+<section class="step">
+  <h2><span class="n">2</span>Today's work<span class="st" id="st2" data-dyn></span></h2>
+  <p class="why">One line per job. Say who did it and when: morning, afternoon or all day.</p>
+  <div class="card">
+    <div class="permitq outq"><div class="outh">Today's output: must answer</div>
+      <div class="f" data-f="steelYN"><label>Steel installed today?</label><div class="chips" data-chip="steelYN"><button type="button" data-v="Yes">Yes</button><button type="button" data-v="No">No</button></div><div class="outsum" id="steelSum" data-dyn></div></div>
+      <div class="f" data-f="deckYN"><label>Decking installed today?</label><div class="chips" data-chip="deckYN"><button type="button" data-v="Yes">Yes</button><button type="button" data-v="No">No</button></div><div class="outsum" id="deckSum" data-dyn></div></div>
+      <div class="hint">If Yes: add a work line below and type the pieces and the weight in kg.</div>
+    </div>
+    <div id="workList" data-dyn style="display:flex;flex-direction:column;gap:12px"></div>
+    <button type="button" class="addline" id="addWork">+ Add a work line</button>
+    <div class="f" data-f="bolted"><label>Bolted and torqued?</label><div class="chips" data-chip="bolted"><button type="button" data-v="Yes">Yes</button><button type="button" data-v="Part">Part</button><button type="button" data-v="No">No</button><button type="button" data-v="N/A">N/A</button></div></div>
+  </div>
+</section>
+
+<section class="step">
+  <h2><span class="n">3</span>Problems<span class="st" id="st3" data-dyn></span></h2>
+  <p class="why">A stop or an accident: phone the site manager at once. Write it here as well.</p>
+  <div class="card">
+    <div class="f" data-f="hasMissing"><label>Missing or wrong pieces?</label><div class="chips yn" data-chip="hasMissing"><button type="button" data-v="Y" class="warn">Yes</button><button type="button" data-v="N">No</button></div></div>
+    <div class="sub" id="missingBox" hidden>
+      <div class="f" data-f="marks"><label>Member numbers, one per line</label><div class="hint">Exactly as on the piece, example 1002C125. Pick what is wrong.</div><div class="marks" id="marks" data-dyn></div></div>
+      <button type="button" class="addline" id="addMark">+ Add another number</button>
+
+    </div>
+    <div class="f" data-f="hasBroke"><label>Machine broken down?</label><div class="chips yn" data-chip="hasBroke"><button type="button" data-v="Y" class="warn">Yes</button><button type="button" data-v="N">No</button></div></div>
+    <div class="sub" id="brokeBox" hidden><div class="f" data-f="brokeMach"><label for="brokeMach">Which machine</label><select id="brokeMach"><option value="">Choose</option><option value="Boom MEWP">Boom MEWP</option><option value="Scissor lift">Scissor lift</option><option value="Spider MEWP">Spider MEWP</option><option value="Spider crane">Spider crane</option><option value="HIAB crane">HIAB crane</option><option value="Mobile crane">Mobile crane</option><option value="Telehandler">Telehandler</option><option value="Forklift">Forklift</option><option value="Other">Other</option></select></div><div class="f" data-f="brokeFleet"><label for="brokeFleet">Machine number</label><div class="hint">Fleet or serial number, on the machine sticker</div><input id="brokeFleet"></div><div class="f" data-f="brokeWhat"><label>What is wrong with it? Tap all that apply</label><div class="chips" data-multi="brokeWhat"><button type="button" data-v="Will not start">Will not start</button><button type="button" data-v="Battery flat or not charging">Battery flat or not charging</button><button type="button" data-v="Hydraulic leak">Hydraulic leak</button><button type="button" data-v="Electrical fault">Electrical fault</button><button type="button" data-v="Controls not working">Controls not working</button><button type="button" data-v="Error on the screen">Error on the screen</button><button type="button" data-v="Tyre or track damage">Tyre or track damage</button><button type="button" data-v="Damaged">Damaged</button><button type="button" data-v="Other">Other</button></div></div><div class="f" data-f="brokeNote"><label for="brokeNote">Anything else (optional)</label><div class="hint">Write in English if you can. Short words.</div><input id="brokeNote"></div></div>
+    <div class="f" data-f="hasStop"><label>Blocked or stopped today?</label><div class="hint">Area not released, other trade in the way, waiting for steel or crane</div><div class="chips yn" data-chip="hasStop"><button type="button" data-v="Y" class="warn">Yes</button><button type="button" data-v="N">No</button></div></div>
+    <div class="sub" id="stopBox" hidden>
+      <div class="f" data-f="stopHours"><label for="stopHours">Hours lost</label><input id="stopHours" inputmode="decimal"></div>
+      <div class="f" data-f="stopWhy"><label for="stopWhy">Why?</label><select id="stopWhy"><option value="">Choose</option>
+        <option value="Weather or wind">Weather or wind</option><option value="Area not released">Area not released</option><option value="Other trade in our area">Other trade in our area</option><option value="Sisk told us to stop">Sisk told us to stop</option><option value="Waiting for drawings or information">Waiting for drawings or information</option><option value="Waiting for steel or bolts">Waiting for steel or bolts</option><option value="Machine broken down">Machine broken down</option><option value="Crane not available">Crane not available</option><option value="Waiting for inspection">Waiting for inspection</option><option value="Other">Other</option></select></div>
+      <div class="f" data-f="stopMen"><label for="stopMen">How many men stopped?</label><input id="stopMen" inputmode="numeric"></div>
+      <div class="f" data-f="stopWho"><label>Who stopped you?</label><div class="chips" data-chip="stopWho"><button type="button" data-v="Sisk">Sisk</button><button type="button" data-v="Other trade">Other trade</button><button type="button" data-v="CSK" id="ownCoChip" data-dyn>CSK</button><button type="button" data-v="Weather">Weather</button><button type="button" data-v="Nobody, we could not work">Nobody, we could not work</button></div></div>
+    </div>
+    <div class="f" data-f="hasInstr"><label>Instruction from Sisk or anyone else?</label><div class="hint">Change of order, area, method, extra work</div><div class="chips yn" data-chip="hasInstr"><button type="button" data-v="Y" class="warn">Yes</button><button type="button" data-v="N">No</button></div></div>
+    <div class="sub" id="instrBox" hidden>
+      <div class="f" data-f="instrBy"><label>Who gave it?</label><div class="chips" data-chip="instrBy"><button type="button" data-v="Sisk">Sisk</button><button type="button" data-v="CSK" class="ownCo">CSK</button><button type="button" data-v="Other">Other</button></div></div>
+      <div class="f" data-f="instrWho"><label for="instrWho">Name (optional)</label><input id="instrWho"></div>
+      <div class="f" data-f="instrKind"><label>What did they ask? Tap all that apply</label><div class="chips" data-multi="instrKind"><button type="button" data-v="Change of area">Change of area</button><button type="button" data-v="Change of order">Change of order</button><button type="button" data-v="Change of method">Change of method</button><button type="button" data-v="Extra work">Extra work</button><button type="button" data-v="Stop work">Stop work</button><button type="button" data-v="Other">Other</button></div></div>
+      <div class="f" data-f="instrWhat"><label for="instrWhat">Short note (optional)</label><div class="hint">Write in English if you can. Short words.</div><textarea id="instrWhat"></textarea></div>
+    </div>
+  </div>
+</section>
+
+
+<section class="step">
+  <h2><span class="n">4</span>Tomorrow I need<span class="st" id="st4" data-dyn></span></h2>
+  <p class="why">Tap all that apply.</p>
+  <div class="card">
+    <div class="f" data-f="tomorrow"><div class="chips" data-multi="tomorrow"><button type="button" data-v="Nothing">Nothing</button><button type="button" data-v="Area released">Area released</button><button type="button" data-v="Steel">Steel</button><button type="button" data-v="Bolts">Bolts</button><button type="button" data-v="MEWP">MEWP</button><button type="button" data-v="Crane">Crane</button><button type="button" data-v="Drawings or information">Drawings or information</button><button type="button" data-v="More people">More people</button></div><div class="sub" id="moreBox" hidden style="margin-top:10px"><div class="f" data-f="more"><label>More people: which trade and how many</label><div id="moreList" data-dyn style="display:flex;flex-direction:column;gap:8px"></div><button type="button" class="addline" id="addMore">+ Add another trade</button></div></div><div class="f" data-f="needArea" style="margin-top:10px"><label for="needArea">Which area or gridlines</label><input id="needArea"></div></div>
+    <div class="f permitq" data-f="permitYN"><label>Permits needed for tomorrow?</label><div class="hint">Must answer. Say it today so the permit is ready before you start.</div><div class="chips" data-chip="permitYN"><button type="button" data-v="Yes">Yes</button><button type="button" data-v="No">No</button></div></div>
+    <div class="sub" id="permitBox" hidden><div class="f" data-f="permits"><label>Which permits? Tap all that apply</label><div class="chips" data-multi="permits"><button type="button" data-v="Hot work">Hot work</button><button type="button" data-v="Welding">Welding</button><button type="button" data-v="Lifting or lift plan">Lifting or lift plan</button><button type="button" data-v="Work at height">Work at height</button><button type="button" data-v="Excavation">Excavation</button><button type="button" data-v="Confined space">Confined space</button><button type="button" data-v="Electrical isolation">Electrical isolation</button><button type="button" data-v="Other">Other</button></div></div><div class="f" data-f="permitNote"><label for="permitNote">Where and what for (optional)</label><div class="hint">Write in English if you can. Short words.</div><input id="permitNote"></div></div>
+  </div>
+</section>
+
+<section class="step" id="commentsSec">
+  <h2>Any other comments</h2>
+  <p class="why">Optional. Anything else the site manager should know.</p>
+  <div class="card"><div class="f" data-f="comments"><div class="hint">Write in English if you can. Short words.</div><textarea id="comments" style="min-height:90px"></textarea></div></div>
+</section>
+
+<div class="restore">New phone user or testing? <button id="clearBtn">Clear everything on this phone</button></div>
+
+<div id="missBar" hidden><button id="nextMiss"></button></div>
+<div class="sendbar"><button id="checkBtn">Check and send</button></div>
+<div class="sheet" id="sheet" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="settings.js"></script>
+<script>
+const SITE=Object.assign({company:"CSK Stålindustri",ownShort:"CSK",project:"CPH03 / CPH04",mainContractor:"Sisk",
+  companies:["CSK","MBMN","LNW","LCK"],
+  areas:["CPH04 Admin", "CPH04 Colo 1", "CPH04 Colo 2", "CPH04 Colo 3", "CPH04 Gantry", "CPH03 Colo 4", "CPH03 Colo 5", "CPH03 RAB wall North", "CPH03 RAB wall South", "CPH03 RAB wall East", "CPH03 RAB wall West"],
+  trades:["Steel erectors","Black hats","Riggers","Crane operator","Spotters","Painters","Deckers","Fitters","Logistics"]},window.SITE||{});
+const uniq=(a,extra)=>[...new Set((Array.isArray(a)?a:[]).map(x=>String(x).trim()).filter(x=>x&&!extra.includes(x)))].concat(extra);
+const MC=String(SITE.mainContractor||"Main contractor").trim();
+const SETTINGS_BROKEN=!!document.querySelector('script[src="settings.js"]')&&!window.SITE;
+const I18N={"Black Hat Daily Report": ["Raport zilnic șef de echipă", "Dzienny raport brygadzisty"], "How it works": ["Cum funcționează", "Jak to działa"], "Fill in during the day. It saves on this phone by itself.": ["Completează în timpul zilei. Se salvează singur pe acest telefon.", "Wypełniaj w ciągu dnia. Zapisuje się sam na tym telefonie."], "In the evening press Check and send.": ["Seara apasă Verifică și trimite.", "Wieczorem naciśnij Sprawdź i wyślij."], "Copy the report and paste it in WhatsApp to the site manager.": ["Copiază raportul și lipește-l în WhatsApp la șeful de șantier.", "Skopiuj raport i wklej go na WhatsAppie do kierownika budowy."], "Tomorrow your name, crew and machines are still here. Only change what changed.": ["Mâine numele, echipa și utilajele sunt tot aici. Schimbă doar ce s-a schimbat.", "Jutro imię, ekipa i maszyny nadal tu będą. Zmień tylko to, co się zmieniło."], "Me and my crew": ["Eu și echipa mea", "Ja i moja ekipa"], "Kept for tomorrow. Change only what is different.": ["Rămâne pentru mâine. Schimbă doar ce e diferit.", "Zostaje na jutro. Zmień tylko to, co inne."], "Your name": ["Numele tău", "Twoje imię i nazwisko"], "Area and gridlines": ["Zona și axele", "Strefa i osie"], "Example: CPH04 Colo 2, GL 13 to 24, south": ["Exemplu: CPH04 Colo 2, axele 13-24, sud", "Przykład: CPH04 Colo 2, osie 13-24, południe"], "Steel erectors": ["Montatori", "Monterzy"], "Other people": ["Alte persoane", "Inne osoby"], "Other people's job": ["Meseria celorlalți", "Praca innych osób"], "Example: 1 spotter, 1 crane operator. Write none if none.": ["Exemplu: 1 semnalizator, 1 macaragiu. Scrie „nimic” dacă nu e cazul.", "Przykład: 1 sygnalista, 1 operator dźwigu. Wpisz „brak”, jeśli nie ma."], "Machines": ["Utilaje", "Maszyny"], "Example: 2 boom MEWPs, HIAB crane": ["Exemplu: 2 nacele, macara HIAB", "Przykład: 2 podnośniki, dźwig HIAB"], "Start time": ["Ora de începere", "Godzina rozpoczęcia"], "Finish time": ["Ora de terminare", "Godzina zakończenia"], "Anyone left early?": ["A plecat cineva mai devreme?", "Czy ktoś wyszedł wcześniej?"], "Who and when. Write none if none.": ["Cine și când. Scrie „nimic” dacă nu.", "Kto i kiedy. Wpisz „brak”, jeśli nikt."], "Today's work": ["Lucrul de azi", "Dzisiejsza praca"], "What you planned and what you did.": ["Ce ai planificat și ce ai făcut.", "Co było zaplanowane i co zrobiono."], "Task today": ["Sarcina de azi", "Zadanie na dziś"], "Example: main steel south side, columns and beams": ["Exemplu: structura principală latura sud, stâlpi și grinzi", "Przykład: konstrukcja główna strona południowa, słupy i belki"], "Target today": ["Ținta de azi", "Cel na dziś"], "Pieces or tonnes": ["Bucăți sau tone", "Sztuki lub tony"], "Pieces installed": ["Bucăți montate", "Zamontowane sztuki"], "Write 0 if none": ["Scrie 0 dacă nu", "Wpisz 0, jeśli brak"], "Weight installed": ["Greutate montată", "Zamontowana waga"], "Example: 12.5": ["Exemplu: 12.5", "Przykład: 12.5"], "Gridlines finished today": ["Axe terminate azi", "Osie ukończone dziś"], "Bolted and torqued?": ["Șuruburi strânse la cuplu?", "Skręcone i dokręcone momentem?"], "Yes": ["Da", "Tak"], "Part": ["Parțial", "Częściowo"], "No": ["Nu", "Nie"], "Target reached?": ["Ținta atinsă?", "Cel osiągnięty?"], "Why not?": ["De ce nu?", "Dlaczego nie?"], "Problems": ["Probleme", "Problemy"], "A stop or an accident: phone the site manager at once. Write it here as well.": ["Oprire sau accident: sună imediat șeful de șantier. Scrie și aici.", "Przestój lub wypadek: od razu zadzwoń do kierownika budowy. Zapisz to też tutaj."], "Missing or wrong pieces?": ["Piese lipsă sau greșite?", "Brakujące lub błędne elementy?"], "Member numbers, one per line": ["Numerele pieselor, unul pe rând", "Numery elementów, jeden w linii"], "Exactly as on the piece, example 1002C125": ["Exact ca pe piesă, exemplu 1002C125", "Dokładnie jak na elemencie, np. 1002C125"], "+ Add another number": ["+ Adaugă alt număr", "+ Dodaj kolejny numer"], "What is wrong?": ["Ce nu e în regulă?", "Co jest nie tak?"], "Missing, damaged, wrong piece, holes do not fit": ["Lipsă, deteriorată, piesă greșită, găurile nu se potrivesc", "Brak, uszkodzony, zły element, otwory nie pasują"], "Work stopped today?": ["S-a oprit lucrul azi?", "Czy praca stała dziś?"], "Stopped at": ["Oprit la ora", "Przerwa od"], "Restarted at": ["Reluat la ora", "Wznowiono o"], "Why?": ["De ce?", "Dlaczego?"], "Choose": ["Alege", "Wybierz"], "Weather or wind": ["Vreme sau vânt", "Pogoda lub wiatr"], "Area not released": ["Zona nu a fost predată", "Strefa nieprzekazana"], "Other trade in our area": ["Altă echipă în zona noastră", "Inna branża w naszej strefie"], "Sisk told us to stop": ["Sisk ne-a oprit", "Sisk kazał przerwać"], "Waiting for drawings or information": ["Așteptăm desene sau informații", "Czekamy na rysunki lub informacje"], "Waiting for steel or bolts": ["Așteptăm oțel sau șuruburi", "Czekamy na stal lub śruby"], "Machine broken down": ["Utilaj defect", "Awaria maszyny"], "Crane not available": ["Macara indisponibilă", "Dźwig niedostępny"], "Permit or RAMS not ready": ["Permisul sau RAMS nu sunt gata", "Pozwolenie lub RAMS niegotowe"], "Waiting for inspection": ["Așteptăm inspecția", "Czekamy na odbiór"], "Other": ["Altele", "Inne"], "How many men stopped?": ["Câți oameni au stat?", "Ilu ludzi stało?"], "Who stopped you, what happened": ["Cine v-a oprit, ce s-a întâmplat", "Kto was zatrzymał, co się stało"], "Instruction from Sisk or anyone else?": ["Instrucțiune de la Sisk sau altcineva?", "Polecenie od Sisk lub kogoś innego?"], "Change of order, area, method, extra work": ["Schimbare de ordine, zonă, metodă, lucru suplimentar", "Zmiana kolejności, strefy, metody, dodatkowa praca"], "Who gave it (name, company)": ["Cine a dat-o (nume, firmă)", "Kto wydał (imię, firma)"], "What did they ask?": ["Ce au cerut?", "Czego żądali?"], "Safety": ["Siguranță", "Bezpieczeństwo"], "Answer every line.": ["Răspunde la fiecare rând.", "Odpowiedz na każdą linię."], "Briefing done and signed?": ["Instructajul făcut și semnat?", "Odprawa przeprowadzona i podpisana?"], "Permit or lift plan number": ["Număr permis sau plan de ridicare", "Numer pozwolenia lub planu podnoszenia"], "Write none if none": ["Scrie „nimic” dacă nu e", "Wpisz „brak”, jeśli brak"], "Incident, near miss or damage?": ["Incident, aproape-accident sau pagubă?", "Wypadek, zdarzenie potencjalnie wypadkowe lub szkoda?"], "What happened?": ["Ce s-a întâmplat?", "Co się stało?"], "Area left safe?": ["Zona lăsată în siguranță?", "Strefa pozostawiona bezpiecznie?"], "Barriers up, tools away, MEWP parked and charging": ["Bariere puse, scule strânse, nacela parcată și la încărcat", "Bariery ustawione, narzędzia schowane, podnośnik zaparkowany i ładowany"], "Tomorrow I need": ["Mâine am nevoie de", "Jutro potrzebuję"], "Area, steel, bolts, machine, crane. Write none if nothing.": ["Zonă, oțel, șuruburi, utilaj, macara. Scrie „nimic” dacă nu.", "Strefa, stal, śruby, maszyna, dźwig. Wpisz „brak”, jeśli nic."], "Lost your details on this phone?": ["Ai pierdut datele de pe telefon?", "Zgubiłeś dane na tym telefonie?"], "Paste an old report to fill them in": ["Lipește un raport vechi ca să le completezi", "Wklej stary raport, aby je uzupełnić"], "Check and send": ["Verifică și trimite", "Sprawdź i wyślij"], "Back": ["Înapoi", "Wstecz"], "Not complete yet": ["Încă nu e complet", "Jeszcze niekompletne"], "Fill in these items. They are marked red on the form.": ["Completează aceste rubrici. Sunt marcate cu roșu în formular.", "Uzupełnij te pola. Są zaznaczone na czerwono w formularzu."], "Back to the form": ["Înapoi la formular", "Wróć do formularza"], "Ready to send": ["Gata de trimis", "Gotowe do wysłania"], "Press Copy report.": ["Apasă Copiază raportul.", "Naciśnij Kopiuj raport."], "Open WhatsApp, the chat with the site manager.": ["Deschide WhatsApp, conversația cu șeful de șantier.", "Otwórz WhatsApp, czat z kierownikiem budowy."], "Press and hold in the message box, Paste, Send.": ["Ține apăsat în căsuța de mesaj, Lipește, Trimite.", "Przytrzymaj w polu wiadomości, Wklej, Wyślij."], "Copy report": ["Copiază raportul", "Kopiuj raport"], "If Copy does not work: press and hold on the report text, Select all, Copy.": ["Dacă nu se copiază: ține apăsat pe textul raportului, Selectează tot, Copiază.", "Jeśli kopiowanie nie działa: przytrzymaj tekst raportu, Zaznacz wszystko, Kopiuj."], "Copied. Now paste in WhatsApp": ["Copiat. Acum lipește în WhatsApp", "Skopiowano. Teraz wklej na WhatsAppie"], "Text selected: press Copy on your phone": ["Text selectat: apasă Copiază pe telefon", "Tekst zaznaczony: naciśnij Kopiuj w telefonie"], "Flags for the site manager": ["Semnale pentru șeful de șantier", "Flagi dla kierownika budowy"], "Stops and incidents: phone the site manager now as well.": ["Opriri și incidente: sună acum și șeful de șantier.", "Przestoje i wypadki: zadzwoń teraz także do kierownika budowy."], "No flags today.": ["Fără semnale azi.", "Dziś bez flag."], "The report goes to the site manager in English. What you typed stays as you wrote it.": ["Raportul ajunge la șeful de șantier în engleză. Ce ai scris tu rămâne cum ai scris.", "Raport trafia do kierownika budowy po angielsku. To, co wpisałeś, zostaje bez zmian."], "Fill in from an old report": ["Completează dintr-un raport vechi", "Uzupełnij ze starego raportu"], "In WhatsApp, press and hold one of your old reports, Copy. Then press and hold in the box below and Paste.": ["În WhatsApp, ține apăsat pe unul din rapoartele tale vechi, Copiază. Apoi ține apăsat în căsuța de mai jos și Lipește.", "Na WhatsAppie przytrzymaj jeden ze swoich starych raportów, Kopiuj. Potem przytrzymaj w polu poniżej i Wklej."], "Paste here": ["Lipește aici", "Wklej tutaj"], "Fill in my details": ["Completează datele mele", "Uzupełnij moje dane"], "details filled in": ["date completate", "danych uzupełniono"], "Nothing found: paste a whole report": ["Nimic găsit: lipește un raport întreg", "Nic nie znaleziono: wklej cały raport"], "Your crew details are kept from last time": ["Datele echipei sunt păstrate de data trecută", "Dane ekipy zachowane z ostatniego razu"], "Number of steel erectors": ["Numărul de montatori", "Liczba monterów"], "Other people's job (or none)": ["Meseria celorlalți (sau „nimic”)", "Praca innych osób (lub „brak”)"], "Anyone left early (or none)": ["Cine a plecat mai devreme (sau „nimic”)", "Kto wyszedł wcześniej (lub „brak”)"], "Pieces installed (0 if none)": ["Bucăți montate (0 dacă nu)", "Zamontowane sztuki (0, jeśli brak)"], "Weight installed (0 if none)": ["Greutate montată (0 dacă nu)", "Zamontowana waga (0, jeśli brak)"], "Weight: tap kg or T": ["Greutate: apasă kg sau T", "Waga: wybierz kg lub T"], "Bolted and torqued: Yes, Part or No": ["Șuruburi strânse: Da, Parțial sau Nu", "Skręcone: Tak, Częściowo lub Nie"], "Target reached: Yes, Part or No": ["Ținta atinsă: Da, Parțial sau Nu", "Cel osiągnięty: Tak, Częściowo lub Nie"], "Why the target was not reached": ["De ce nu s-a atins ținta", "Dlaczego cel nie został osiągnięty"], "Missing or wrong pieces: Yes or No": ["Piese lipsă sau greșite: Da sau Nu", "Brakujące lub błędne elementy: Tak lub Nie"], "At least one member number": ["Cel puțin un număr de piesă", "Co najmniej jeden numer elementu"], "What is wrong with the pieces": ["Ce e în neregulă cu piesele", "Co jest nie tak z elementami"], "Work stopped: Yes or No": ["Lucrul oprit: Da sau Nu", "Praca stała: Tak lub Nie"], "Time work stopped": ["Ora opririi", "Godzina przerwania"], "Time work restarted": ["Ora reluării", "Godzina wznowienia"], "Why work stopped": ["De ce s-a oprit lucrul", "Dlaczego praca stała"], "How many men stopped": ["Câți oameni au stat", "Ilu ludzi stało"], "Instruction: Yes or No": ["Instrucțiune: Da sau Nu", "Polecenie: Tak lub Nie"], "Who gave the instruction": ["Cine a dat instrucțiunea", "Kto wydał polecenie"], "What the instruction was": ["Care a fost instrucțiunea", "Jakie było polecenie"], "Briefing signed: Yes or No": ["Instructaj semnat: Da sau Nu", "Odprawa podpisana: Tak lub Nie"], "Permit or lift plan number (or none)": ["Număr permis sau plan de ridicare (sau „nimic”)", "Numer pozwolenia lub planu podnoszenia (lub „brak”)"], "Incident: Yes or No": ["Incident: Da sau Nu", "Wypadek: Tak lub Nie"], "What happened in the incident": ["Ce s-a întâmplat la incident", "Co się stało przy zdarzeniu"], "Area left safe: Yes or No": ["Zonă lăsată în siguranță: Da sau Nu", "Strefa bezpieczna: Tak lub Nie"], "Tomorrow I need (or none)": ["Mâine am nevoie de (sau „nimic”)", "Jutro potrzebuję (lub „brak”)"], "Weight: numbers only, example 12.5": ["Greutate: doar cifre, exemplu 12.5", "Waga: tylko cyfry, np. 12.5"], "Tomorrow your name, crew and work lines are still here. Only change what changed.": ["Mâine numele, echipa și liniile de lucru sunt tot aici. Schimbă doar ce s-a schimbat.", "Jutro imię, ekipa i linie pracy nadal tu będą. Zmień tylko to, co się zmieniło."], "Crew today": ["Echipa de azi", "Ekipa dzisiaj"], "One line per company and job. Painters, deckers, spotters: each their own line.": ["Câte o linie pentru fiecare firmă și meserie. Vopsitori, deckeri, semnalizatori: fiecare pe linia lui.", "Jedna linia na firmę i zawód. Malarze, deckarze, sygnaliści: każdy w osobnej linii."], "+ Add a crew line": ["+ Adaugă o linie de echipă", "+ Dodaj linię ekipy"], "One line per job. Say who did it and when: morning, afternoon or all day.": ["Câte o linie pentru fiecare lucrare. Spune cine a făcut-o și când: dimineața, după-amiaza sau toată ziua.", "Jedna linia na każdą pracę. Podaj, kto ją wykonał i kiedy: rano, po południu czy cały dzień."], "+ Add a work line": ["+ Adaugă o linie de lucru", "+ Dodaj linię pracy"], "No steel today": ["Fără oțel azi", "Dziś bez stali"], "Crew line": ["Linia de echipă", "Linia ekipy"], "Remove": ["Șterge", "Usuń"], "Company": ["Firma", "Firma"], "Job": ["Lucrarea", "Praca"], "How many": ["Câți", "Ilu"], "Hours each": ["Ore fiecare", "Godzin każdy"], "Example: 10": ["Exemplu: 10", "Przykład: 10"], "People on site": ["Oameni pe șantier", "Osób na budowie"], "Deckers": ["Deckeri", "Deckarze"], "Painters": ["Vopsitori", "Malarze"], "Touch-up / fire caps": ["Retușuri / capace ignifuge", "Poprawki / nakładki ogniowe"], "Spotters": ["Semnalizatori", "Sygnaliści"], "Crane operator": ["Macaragiu", "Operator dźwigu"], "Plant operators": ["Operatori utilaje", "Operatorzy maszyn"], "Fitters": ["Lăcătuși", "Ślusarze"], "Labourers": ["Muncitori necalificați", "Pomocnicy"], "Surveyor": ["Topograf", "Geodeta"], "Work line": ["Linia de lucru", "Linia pracy"], "What": ["Ce", "Co"], "Who did it": ["Cine a făcut-o", "Kto wykonał"], "When": ["Când", "Kiedy"], "All day": ["Toată ziua", "Cały dzień"], "Morning": ["Dimineața", "Rano"], "Permits needed for tomorrow?": ["Permise necesare pentru mâine?", "Pozwolenia potrzebne na jutro?"], "Must answer. Say it today so the permit is ready before you start.": ["Răspuns obligatoriu. Spune azi ca permisul să fie gata înainte să începi.", "Odpowiedź obowiązkowa. Powiedz dziś, żeby pozwolenie było gotowe przed startem."], "Which permits? Tap all that apply": ["Ce permise? Apasă tot ce se potrivește", "Jakie pozwolenia? Zaznacz wszystkie pasujące"], "Hot work": ["Lucru cu foc", "Prace gorące"], "Lifting or lift plan": ["Ridicare sau plan de ridicare", "Podnoszenie lub plan podnoszenia"], "Work at height": ["Lucru la înălțime", "Praca na wysokości"], "Excavation": ["Excavare", "Wykop"], "Confined space": ["Spațiu închis", "Przestrzeń zamknięta"], "Electrical isolation": ["Izolare electrică", "Odłączenie elektryczne"], "Where and what for (optional)": ["Unde și pentru ce (opțional)", "Gdzie i do czego (opcjonalnie)"], "Permits needed for tomorrow: Yes or No": ["Permise pentru mâine: Da sau Nu", "Pozwolenia na jutro: Tak lub Nie"], "Which permits are needed tomorrow": ["Ce permise sunt necesare mâine", "Jakie pozwolenia są potrzebne jutro"], "Missing people: put each person on a work line.": ["Lipsesc oameni: pune fiecare om pe o linie de lucru.", "Brakuje osób: wpisz każdą osobę w linię pracy."], "Too many: check the numbers on the work lines.": ["Prea mulți: verifică numerele de pe liniile de lucru.", "Za dużo: sprawdź liczby w liniach pracy."], "Any other comments": ["Alte comentarii", "Inne uwagi"], "Change of area": ["Schimbare de zonă", "Zmiana strefy"], "Change of method": ["Schimbare de metodă", "Zmiana metody"], "Change of order": ["Schimbare de ordine", "Zmiana kolejności"], "Extra work": ["Lucrare în plus", "Dodatkowa praca"], "Stop work": ["Oprirea lucrului", "Wstrzymanie pracy"], "Name (optional)": ["Numele (opțional)", "Imię i nazwisko (opcjonalnie)"], "One report per team, sent by the lead black hat.": ["Un singur raport pe echipă, trimis de șeful de echipă principal.", "Jeden raport na ekipę, wysyła go główny brygadzista."], "Optional. Anything else the site manager should know.": ["Opțional. Orice altceva ce trebuie să știe șeful de șantier.", "Opcjonalnie. Wszystko, co kierownik budowy powinien wiedzieć."], "Short note (optional)": ["Notă scurtă (opțional)", "Krótka notatka (opcjonalnie)"], "What did they ask? Tap all that apply": ["Ce au cerut? Apasă tot ce se potrivește", "O co poprosili? Zaznacz wszystko, co pasuje"], "Who gave it?": ["Cine a dat-o?", "Kto ją wydał?"], "Write in English if you can. Short words.": ["Scrie în engleză dacă poți. Cuvinte scurte.", "Pisz po angielsku, jeśli możesz. Krótko."], "Count yourself once, under Black hats. These ticks do not add a person.": ["Numără-te o singură dată, la Black hats. Aceste bife nu adaugă o persoană.", "Policz siebie raz, w Black hats. Te zaznaczenia nie dodają osoby."], "Weight installed (kg)": ["Greutate montată (kg)", "Zamontowana waga (kg)"], "You, the black hat: are you also working as": ["Tu, șeful de echipă: lucrezi și ca", "Ty, brygadzista: czy pracujesz też jako"], "weight is in kg. Did you type tonnes? Example: 1.5 T = 1500": ["greutatea e în kg. Ai scris tone? Exemplu: 1,5 T = 1500", "waga jest w kg. Czy wpisałeś tony? Przykład: 1,5 T = 1500"], "Riggers": ["Riggeri (legători sarcină)", "Hakowi"], "Rigger": ["Rigger (legător sarcină)", "Hakowy"], "Spotter": ["Semnalizator", "Sygnalista"], "Banksman": ["Semnalizator macara (banksman)", "Sygnalista dźwigu"], "Other company": ["Altă firmă", "Inna firma"], "Company name": ["Numele firmei", "Nazwa firmy"], "Type the company name": ["Scrie numele firmei", "Wpisz nazwę firmy"], "Type the other company name": ["Scrie numele celeilalte firme", "Wpisz nazwę innej firmy"], "Other trade: what is it? (only if you typed a number next to Other)": ["Altă meserie: care? (doar dacă ai scris un număr la Altele)", "Inny zawód: jaki? (tylko jeśli wpisałeś liczbę przy Inne)"], "write what the Other trade is": ["scrie care e cealaltă meserie", "wpisz, jaki to inny zawód"], "Tap the companies in your team. Then type how many of each trade. Leave the rest empty.": ["Apasă firmele din echipa ta. Apoi scrie câți din fiecare meserie. Lasă restul gol.", "Zaznacz firmy w swojej ekipie. Potem wpisz ilu z każdego zawodu. Resztę zostaw pustą."], "Tick whole team": ["Bifează toată echipa", "Zaznacz całą ekipę"], "Fill in the crew first": ["Completează întâi echipa", "Najpierw uzupełnij ekipę"], "Tap the companies in your team": ["Apasă firmele din echipa ta", "Zaznacz firmy w swojej ekipie"], "Tap Tick whole team, or tick each trade. Change a number only if someone was elsewhere.": ["Apasă Bifează toată echipa sau bifează fiecare meserie. Schimbă un număr doar dacă cineva a fost în altă parte.", "Naciśnij Zaznacz całą ekipę albo zaznacz każdy zawód. Zmień liczbę tylko, jeśli ktoś był gdzie indziej."], "Area": ["Zona", "Strefa"], "area": ["zona", "strefa"], "Type the area": ["Scrie zona", "Wpisz strefę"], "Admin": ["Admin", "Admin"], "Gantry": ["Gantry", "Gantry"], "RAB wall North": ["Perete RAB Nord", "Ściana RAB Północ"], "RAB wall South": ["Perete RAB Sud", "Ściana RAB Południe"], "RAB wall East": ["Perete RAB Est", "Ściana RAB Wschód"], "RAB wall West": ["Perete RAB Vest", "Ściana RAB Zachód"], "Colo 1": ["Colo 1", "Colo 1"], "Colo 2": ["Colo 2", "Colo 2"], "Colo 3": ["Colo 3", "Colo 3"], "Colo 4": ["Colo 4", "Colo 4"], "Colo 5": ["Colo 5", "Colo 5"], "Black hats": ["Șefi de echipă (black hats)", "Brygadziści (black hats)"], "Crew": ["Echipa", "Ekipa"], "Job or area (optional)": ["Lucrare sau zonă (opțional)", "Praca lub strefa (opcjonalnie)"], "How many of each trade": ["Câți din fiecare meserie", "Ilu z każdego zawodu"], "+ Add another crew": ["+ Adaugă altă echipă", "+ Dodaj kolejną ekipę"], "tick whole crew": ["bifează toată echipa", "zaznacz całą ekipę"], "One card per company crew. Type how many of each trade. Leave the rest empty.": ["Câte un card pentru fiecare echipă de firmă. Scrie câți din fiecare meserie. Lasă restul gol.", "Jedna karta na ekipę firmy. Wpisz ilu z każdego zawodu. Resztę zostaw pustą."], "pick the company": ["alege firma", "wybierz firmę"], "type how many next to at least one trade": ["scrie câți lângă cel puțin o meserie", "wpisz ilu przy co najmniej jednym zawodzie"], "Type how many next to at least one trade": ["Scrie câți lângă cel puțin o meserie", "Wpisz ilu przy co najmniej jednym zawodzie"], "Tap tick whole crew, or tick each trade. Change a number only if someone was elsewhere.": ["Apasă bifează toată echipa sau bifează fiecare meserie. Schimbă un număr doar dacă cineva a fost în altă parte.", "Naciśnij zaznacz całą ekipę albo zaznacz każdy zawód. Zmień liczbę tylko, jeśli ktoś był gdzie indziej."], "Tap tick whole job, or tick each trade. Change a number only if someone was elsewhere.": ["Apasă bifează toată lucrarea sau bifează fiecare meserie. Schimbă un număr doar dacă cineva a fost în altă parte.", "Naciśnij zaznacz całą pracę albo zaznacz każdy zawód. Zmień liczbę tylko, jeśli ktoś był gdzie indziej."], "+ Add a job": ["+ Adaugă o lucrare", "+ Dodaj pracę"], "Job name or area (optional)": ["Numele lucrării sau zona (opțional)", "Nazwa pracy lub strefa (opcjonalnie)"], "tick whole job": ["bifează toată lucrarea", "zaznacz całą pracę"], "One card per job. In it add every trade in that gang: company, trade, how many.": ["Câte un card pentru fiecare lucrare. În el adaugă fiecare meserie din echipă: firma, meseria, câți.", "Jedna karta na pracę. Dodaj w niej każdy zawód z ekipy: firma, zawód, ilu."], "More people: which trade and how many": ["Mai mulți oameni: ce meserie și câți", "Więcej ludzi: jaki zawód i ilu"], "+ Add another trade": ["+ Adaugă altă meserie", "+ Dodaj kolejny zawód"], "trade and how many": ["meseria și câți", "zawód i ilu"], "N/A": ["N/A", "N/D"], "Bolted and torqued: Yes, Part, No or N/A": ["Strâns și cu cuplu: Da, Parțial, Nu sau N/A", "Skręcone i dokręcone: Tak, Częściowo, Nie lub N/D"], "Target reached: Yes, Part, No or N/A": ["Ținta atinsă: Da, Parțial, Nu sau N/A", "Cel osiągnięty: Tak, Częściowo, Nie lub N/D"], "Missing or wrong pieces: Yes, No or N/A": ["Piese lipsă sau greșite: Da, Nu sau N/A", "Brakujące lub błędne elementy: Tak, Nie lub N/D"], "Trade": ["Meseria", "Zawód"], "Add a trade": ["Adaugă o meserie", "Dodaj zawód"], "+ Add a company": ["+ Adaugă o firmă", "+ Dodaj firmę"], "Total on site": ["Total pe șantier", "Razem na budowie"], "By trade": ["Pe meserii", "Według zawodów"], "By company": ["Pe firme", "Według firm"], "company, trade and how many": ["firma, meseria și câți", "firma, zawód i ilu"], "One card per company. Inside it add each trade: steel erectors, painters, spotters and so on, with how many.": ["Câte un card pentru fiecare firmă. În el adaugă fiecare meserie: montatori, vopsitori, semnalizatori etc., cu câți.", "Jedna karta na firmę. W niej dodaj każdy zawód: monterzy, malarze, sygnaliści itd., z liczbą osób."], "morning": ["dimineața", "rano"], "afternoon": ["după-amiaza", "po południu"], "of": ["din", "z"], "Too many: check the numbers on the work lines and reasons.": ["Prea mulți: verifică numerele de pe liniile de lucru și motive.", "Za dużo: sprawdź liczby w liniach pracy i powodach."], "Missing people: put each person on a work line or a reason line.": ["Lipsesc oameni: pune fiecare om pe o linie de lucru sau pe o linie de motiv.", "Brakuje osób: wpisz każdą osobę w linię pracy lub linię powodu."], "How long": ["Cât timp", "Jak długo"], "how long: all day, morning or afternoon": ["cât timp: toată ziua, dimineața sau după-amiaza", "jak długo: cały dzień, rano czy po południu"], "Any of them not working as steel erectors?": ["Vreunul nu lucrează ca montator?", "Czy ktoś z nich nie pracuje jako monter?"], "Reason": ["Motivul", "Powód"], "+ Add another reason": ["+ Adaugă alt motiv", "+ Dodaj kolejny powód"], "Add another reason": ["Adaugă alt motiv", "Dodaj kolejny powód"], "No relevant qualification or card": ["Fără calificare potrivită sau card", "Brak odpowiednich uprawnień lub karty"], "CSK management: other area": ["Conducerea CSK: altă zonă", "Kierownictwo CSK: inna strefa"], "CSK management: other tasks": ["Conducerea CSK: alte sarcini", "Kierownictwo CSK: inne zadania"], "Other area": ["Altă zonă", "Inna strefa"], "Other tasks": ["Alte sarcini", "Inne zadania"], "any not working as steel erectors? Yes or No": ["vreunul nu lucrează ca montator? Da sau Nu", "czy ktoś nie pracuje jako monter? Tak lub Nie"], "why and how many not working as steel erectors": ["de ce și câți nu lucrează ca montatori", "dlaczego i ilu nie pracuje jako monterzy"], "reason": ["motivul", "powód"], "more people not working as steel erectors than in the crew line": ["mai mulți oameni care nu lucrează ca montatori decât în linia de echipă", "więcej osób niepracujących jako monterzy niż w linii ekipy"], "Afternoon": ["După-amiaza", "Po południu"], "Fill in the crew lines first": ["Completează întâi liniile de echipă", "Najpierw uzupełnij linie ekipy"], "Gridlines finished": ["Axe terminate", "Osie ukończone"], "What was done": ["Ce s-a făcut", "Co zrobiono"], "Example: cell 1 columns finished": ["Exemplu: stâlpii din celula 1 terminați", "Przykład: słupy w celi 1 skończone"], "Target for this line": ["Ținta pentru această linie", "Cel dla tej linii"], "Steel": ["Oțel", "Stal"], "Other work": ["Alte lucrări", "Inne prace"], "Main steel": ["Structura principală", "Konstrukcja główna"], "Gantry steel": ["Oțel gantry", "Stal gantry"], "Hanging steel": ["Oțel suspendat", "Stal podwieszana"], "Secondary steel": ["Oțel secundar", "Stal drugorzędna"], "Bracings": ["Contravântuiri", "Stężenia"], "Purlins": ["Pane", "Płatwie"], "Door / window steel": ["Rame uși / ferestre", "Stal drzwi / okien"], "Parapet steel": ["Oțel parapet", "Stal attyki"], "Decking / roof plates": ["Tablă cutată / acoperiș", "Blacha trapezowa / dach"], "Stairs and handrails": ["Scări și balustrade", "Schody i balustrady"], "Touch-up painting": ["Retușuri vopsea", "Poprawki malarskie"], "Fire caps": ["Capace ignifuge", "Nakładki ogniowe"], "Bolting / torque": ["Strângere șuruburi / cuplu", "Skręcanie / moment"], "Survey / alignment": ["Măsurători / aliniere", "Pomiary / wyrównanie"], "Netting": ["Plase de siguranță", "Siatki ochronne"], "Snagging": ["Remedieri", "Usuwanie usterek"], "Offloading": ["Descărcare", "Rozładunek"], "At least one crew line": ["Cel puțin o linie de echipă", "Co najmniej jedna linia ekipy"], "company, job and how many": ["firma, meseria și câți", "firma, zawód i ilu"], "At least one work line": ["Cel puțin o linie de lucru", "Co najmniej jedna linia pracy"], "area and gridlines": ["zona și axele", "strefa i osie"], "what was the work": ["ce lucrare a fost", "jaka to była praca"], "who did it": ["cine a făcut-o", "kto wykonał"], "pieces installed (0 if none)": ["bucăți montate (0 dacă nu)", "zamontowane sztuki (0, jeśli brak)"], "weight installed (0 if none)": ["greutate montată (0 dacă nu)", "zamontowana waga (0, jeśli brak)"], "weight, numbers only": ["greutate, doar cifre", "waga, tylko cyfry"], "tap kg or T": ["apasă kg sau T", "wybierz kg lub T"], "what was done": ["ce s-a făcut", "co zrobiono"], "Your crew and work lines are kept from last time": ["Echipa și liniile de lucru sunt păstrate de data trecută", "Ekipa i linie pracy zachowane z ostatniego razu"], "Type how many of each. Leave the rest empty.": ["Scrie câte din fiecare. Lasă restul gol.", "Wpisz ile każdego. Resztę zostaw pustą."], "No machines today": ["Fără utilaje azi", "Dziś bez maszyn"], "Boom MEWP": ["Nacelă cu braț", "Podnośnik przegubowy"], "Scissor lift": ["Platformă foarfecă", "Podnośnik nożycowy"], "Spider MEWP": ["Nacelă păianjen", "Podnośnik pająk"], "Spider crane": ["Macara păianjen", "Żuraw pająk"], "HIAB crane": ["Macara HIAB", "Dźwig HIAB"], "Mobile crane": ["Macara mobilă", "Dźwig mobilny"], "Telehandler": ["Telehandler", "Ładowarka teleskopowa"], "Forklift": ["Stivuitor", "Wózek widłowy"], "At what time": ["La ce oră", "O której"], "Why not? Tap all that apply": ["De ce nu? Apasă tot ce se potrivește", "Dlaczego nie? Zaznacz wszystko, co pasuje"], "Missing steel": ["Lipsă oțel", "Brak stali"], "Work stopped": ["Lucru oprit", "Praca stała"], "Fewer people": ["Mai puțini oameni", "Mniej ludzi"], "Machine problem": ["Problemă utilaj", "Problem z maszyną"], "Weather": ["Vremea", "Pogoda"], "Waiting for other trade": ["Așteptăm altă echipă", "Czekamy na inną branżę"], "Took longer than planned": ["A durat mai mult decât planificat", "Trwało dłużej niż planowano"], "Exactly as on the piece, example 1002C125. Pick what is wrong.": ["Exact ca pe piesă, exemplu 1002C125. Alege ce nu e în regulă.", "Dokładnie jak na elemencie, np. 1002C125. Wybierz, co jest nie tak."], "Missing": ["Lipsă", "Brak"], "Damaged": ["Deteriorată", "Uszkodzony"], "Wrong piece": ["Piesă greșită", "Zły element"], "Holes do not fit": ["Găurile nu se potrivesc", "Otwory nie pasują"], "Not painted": ["Nevopsită", "Niepomalowany"], "Who stopped you?": ["Cine v-a oprit?", "Kto was zatrzymał?"], "Other trade": ["Altă echipă", "Inna branża"], "Nobody, we could not work": ["Nimeni, nu am putut lucra", "Nikt, nie mogliśmy pracować"], "No permit needed": ["Nu e nevoie de permis", "Pozwolenie niepotrzebne"], "Number": ["Număr", "Numer"], "Tap all that apply.": ["Apasă tot ce se potrivește.", "Zaznacz wszystko, co pasuje."], "Nothing": ["Nimic", "Nic"], "Area released": ["Zona predată", "Przekazana strefa"], "Bolts": ["Șuruburi", "Śruby"], "MEWP": ["Nacelă", "Podnośnik"], "Crane": ["Macara", "Dźwig"], "Drawings or information": ["Desene sau informații", "Rysunki lub informacje"], "Permit": ["Permis", "Pozwolenie"], "More people": ["Mai mulți oameni", "Więcej ludzi"], "Which area or gridlines": ["Ce zonă sau axe", "Jaka strefa lub osie"], "How far": ["Cât s-a făcut", "Jak daleko"], "Finished": ["Terminat", "Skończone"], "Part done": ["Parțial", "Częściowo"], "Not started": ["Neînceput", "Nie rozpoczęte"], "Gridlines or cell done": ["Axe sau celulă făcute", "Osie lub cela zrobione"], "Tap the crew who did this work. More than one is fine.": ["Apasă echipa care a făcut lucrarea. Pot fi mai multe.", "Zaznacz ekipę, która wykonała pracę. Może być kilka."], "Machines: a number, or No machines today": ["Utilaje: un număr sau Fără utilaje azi", "Maszyny: liczba lub Dziś bez maszyn"], "Anyone left early: Yes or No": ["A plecat cineva mai devreme: Da sau Nu", "Czy ktoś wyszedł wcześniej: Tak lub Nie"], "How many left early": ["Câți au plecat mai devreme", "Ilu wyszło wcześniej"], "Time they left": ["Ora la care au plecat", "Godzina wyjścia"], "how far: Finished, Part done or Not started": ["cât s-a făcut: Terminat, Parțial sau Neînceput", "jak daleko: Skończone, Częściowo lub Nie rozpoczęte"], "What is wrong with each piece": ["Ce nu e în regulă la fiecare piesă", "Co jest nie tak z każdym elementem"], "Who stopped you": ["Cine v-a oprit", "Kto was zatrzymał"], "Permit or lift plan number (or No permit needed)": ["Număr permis sau plan de ridicare (sau Nu e nevoie de permis)", "Numer pozwolenia lub planu podnoszenia (lub Pozwolenie niepotrzebne)"], "Tomorrow I need: tap at least one": ["Mâine am nevoie de: apasă cel puțin una", "Jutro potrzebuję: zaznacz co najmniej jedno"], "Logistics": ["Logistică", "Logistyka"], "Decking": ["Tablă cutată", "Blacha trapezowa"], "Edge trims and closures": ["Profile de margine și închideri", "Obróbki krawędzi i zamknięcia"], "Spotting / banksman": ["Semnalizare / dirijare", "Sygnalista / hakowy"], "Deliveries / offloading": ["Livrări / descărcare", "Dostawy / rozładunek"], "Logistics / material moves": ["Logistică / mutare materiale", "Logistyka / przenoszenie materiałów"], "Housekeeping": ["Curățenie și ordine", "Porządek na budowie"], "m² laid": ["m² montați", "m² ułożone"], "m² laid (0 if none)": ["m² montați (0 dacă nu)", "m² ułożone (0, jeśli brak)"], "m², numbers only": ["m², doar cifre", "m², tylko cyfry"], "item missing": ["rubrică lipsă", "brakujące pole"], "items missing": ["rubrici lipsă", "brakujących pól"], "tap to go to the next": ["apasă pentru următoarea", "dotknij, aby przejść do następnego"], "New phone user or testing?": ["Utilizator nou pe telefon sau test?", "Nowy użytkownik telefonu lub test?"], "Clear everything on this phone": ["Șterge tot de pe acest telefon", "Wyczyść wszystko na tym telefonie"], "Tap again to clear everything": ["Apasă din nou ca să ștergi tot", "Dotknij ponownie, aby wyczyścić wszystko"], "Cleared. The form is empty.": ["Șters. Formularul e gol.", "Wyczyszczono. Formularz jest pusty."], "Target for this line, pieces or tonnes": ["Ținta pentru această linie, bucăți sau tone", "Cel dla tej linii, sztuki lub tony"], "Report date": ["Data raportului", "Data raportu"], "Report for an earlier day. Check the date is right.": ["Raport pentru o zi anterioară. Verifică dacă data e corectă.", "Raport za wcześniejszy dzień. Sprawdź, czy data jest poprawna."], "when: all day, morning or afternoon": ["când: toată ziua, dimineața sau după-amiaza", "kiedy: cały dzień, rano czy po południu"], "How to use": ["Cum se folosește", "Jak używać"], "to fill": ["de completat", "do uzupełnienia"], "Done": ["Gata", "Gotowe"], "steps done": ["pași gata", "kroków gotowe"], "Pick your language": ["Alege limba", "Wybierz język"], "English, Română or Polski, at the top.": ["English, Română sau Polski, sus.", "English, Română lub Polski, na górze."], "Fill in the 5 steps during the day": ["Completează cei 5 pași în timpul zilei", "Wypełnij 5 kroków w ciągu dnia"], "Crew, work, problems, safety, tomorrow. It saves on your phone by itself.": ["Echipa, lucrul, probleme, siguranță, mâine. Se salvează singur pe telefon.", "Ekipa, praca, problemy, bezpieczeństwo, jutro. Zapisuje się sam na telefonie."], "Watch the green Done marks": ["Urmărește semnele verzi Gata", "Patrz na zielone oznaczenia Gotowe"], "Each step shows what is left to fill. Green means finished.": ["Fiecare pas arată ce mai e de completat. Verde înseamnă terminat.", "Każdy krok pokazuje, co zostało do uzupełnienia. Zielony oznacza gotowe."], "Before you leave: Check and send": ["Înainte să pleci: Verifică și trimite", "Przed wyjściem: Sprawdź i wyślij"], "One report a day, sent to the site manager on WhatsApp. About 5 minutes.": ["Un raport pe zi, trimis șefului de șantier pe WhatsApp. Cam 5 minute.", "Jeden raport dziennie, wysłany kierownikowi budowy na WhatsAppie. Około 5 minut."], "A stop or an accident: phone the site manager at once. Do not wait for the evening.": ["Oprire sau accident: sună imediat șeful de șantier. Nu aștepta seara.", "Przestój lub wypadek: od razu zadzwoń do kierownika budowy. Nie czekaj do wieczora."], "Start": ["Începe", "Zaczynamy"], "Press Send the report.": ["Apasă Trimite raportul.", "Naciśnij Wyślij raport."], "Choose WhatsApp, then the site manager.": ["Alege WhatsApp, apoi șeful de șantier.", "Wybierz WhatsApp, potem kierownika budowy."], "Press Send.": ["Apasă Trimite.", "Naciśnij Wyślij."], "Send the report": ["Trimite raportul", "Wyślij raport"], "Your report": ["Raportul tău", "Twój raport"], "Or copy it as text": ["Sau copiază-l ca text", "Lub skopiuj jako tekst"], "Sent? If not, press again": ["Trimis? Dacă nu, apasă din nou", "Wysłano? Jeśli nie, naciśnij ponownie"], "Picture saved. In WhatsApp: clip, Gallery, pick it": ["Poza salvată. În WhatsApp: agrafa, Galerie, alege-o", "Zdjęcie zapisane. Na WhatsAppie: spinacz, Galeria, wybierz je"], "Hold your finger on the picture below and save or share it": ["Ține degetul pe poza de mai jos și salveaz-o sau trimite-o", "Przytrzymaj palec na zdjęciu poniżej i zapisz je lub udostępnij"], "To do": ["De făcut", "Do zrobienia"], "Press Send the report, choose WhatsApp and the site manager.": ["Apasă Trimite raportul, alege WhatsApp și șeful de șantier.", "Naciśnij Wyślij raport, wybierz WhatsApp i kierownika budowy."], "Machine broken down?": ["Utilaj defect?", "Awaria maszyny?"], "Which machine": ["Ce utilaj", "Która maszyna"], "Blocked or stopped today?": ["Blocaj sau oprire azi?", "Blokada lub przestój dzisiaj?"], "Area not released, other trade in the way, waiting for steel, crane or permit": ["Zonă nepredată, altă echipă în cale, așteptăm oțel, macara sau permis", "Strefa nieprzekazana, inna branża przeszkadza, czekamy na stal, dźwig lub pozwolenie"], "Hours lost": ["Ore pierdute", "Stracone godziny"], "Machine broken down: Yes or No": ["Utilaj defect: Da sau Nu", "Awaria maszyny: Tak lub Nie"], "Which machine broke down": ["Ce utilaj s-a defectat", "Która maszyna się zepsuła"], "Blocked or stopped: Yes or No": ["Blocaj sau oprire: Da sau Nu", "Blokada lub przestój: Tak lub Nie"], "Use my crew from last time": ["Folosește echipa mea de data trecută", "Użyj mojej ekipy z ostatniego razu"], "Crew and work lines filled in. Type today's numbers.": ["Echipa și liniile de lucru completate. Scrie cifrele de azi.", "Ekipa i linie pracy uzupełnione. Wpisz dzisiejsze liczby."], "Who is on site today.": ["Cine e pe șantier azi.", "Kto jest dziś na budowie."], "The form is empty every morning. Tap Use my crew from last time to fill in your crew quickly.": ["Formularul e gol în fiecare dimineață. Apasă Folosește echipa mea de data trecută ca să completezi echipa repede.", "Formularz jest pusty każdego ranka. Naciśnij Użyj mojej ekipy z ostatniego razu, aby szybko uzupełnić ekipę."], "Fill in the 5 steps before you leave site.": ["Completează cei 5 pași înainte să pleci de pe șantier.", "Wypełnij 5 kroków przed wyjściem z budowy."], "Fill in the 5 steps before you leave site": ["Completează cei 5 pași înainte să pleci de pe șantier", "Wypełnij 5 kroków przed wyjściem z budowy"], "Crew, work, problems, safety, tomorrow. Send it before you close the page.": ["Echipa, lucrul, probleme, siguranță, mâine. Trimite-l înainte să închizi pagina.", "Ekipa, praca, problemy, bezpieczeństwo, jutro. Wyślij przed zamknięciem strony."], "What is wrong with it? Tap all that apply": ["Ce nu e în regulă? Apasă tot ce se potrivește", "Co jest nie tak? Zaznacz wszystko, co pasuje"], "Will not start": ["Nu pornește", "Nie uruchamia się"], "Battery flat or not charging": ["Baterie descărcată sau nu se încarcă", "Rozładowany akumulator lub nie ładuje"], "Hydraulic leak": ["Scurgere hidraulică", "Wyciek hydrauliki"], "Electrical fault": ["Defect electric", "Usterka elektryczna"], "Controls not working": ["Comenzile nu funcționează", "Sterowanie nie działa"], "Error on the screen": ["Eroare pe ecran", "Błąd na ekranie"], "Tyre or track damage": ["Anvelopă sau șenilă deteriorată", "Uszkodzona opona lub gąsienica"], "Anything else (optional)": ["Altceva (opțional)", "Coś jeszcze (opcjonalnie)"], "Fleet or serial number (optional)": ["Număr flotă sau serie (opțional)", "Numer floty lub seryjny (opcjonalnie)"], "What is wrong with the machine": ["Ce nu e în regulă cu utilajul", "Co jest nie tak z maszyną"], "Machine number": ["Numărul utilajului", "Numer maszyny"], "Fleet or serial number, on the machine sticker": ["Număr de flotă sau serie, de pe eticheta utilajului", "Numer floty lub seryjny, z naklejki na maszynie"], "Area not released, other trade in the way, waiting for steel or crane": ["Zonă nepredată, altă echipă în cale, așteptăm oțel sau macara", "Strefa nieprzekazana, inna branża przeszkadza, czekamy na stal lub dźwig"], "how many from": ["câți din", "ilu z"], "used in the morning, more than in the crew line": ["folosiți dimineața, mai mulți decât în linia de echipă", "użytych rano, więcej niż w linii ekipy"], "used in the afternoon, more than in the crew line": ["folosiți după-amiaza, mai mulți decât în linia de echipă", "użytych po południu, więcej niż w linii ekipy"], "Tap the crew who did this work, then type how many. Mixed crews: tap each one.": ["Apasă echipa care a făcut lucrarea, apoi scrie câți. Echipe amestecate: apasă pe fiecare.", "Zaznacz ekipę, która wykonała pracę, potem wpisz ilu. Mieszane ekipy: zaznacz każdą."], "Fill in the 4 steps before you leave site.": ["Completează cei 4 pași înainte să pleci de pe șantier.", "Wypełnij 4 kroki przed wyjściem z budowy."], "Fill in the 4 steps before you leave site": ["Completează cei 4 pași înainte să pleci de pe șantier", "Wypełnij 4 kroki przed wyjściem z budowy"], "Crew, work, problems, tomorrow. Send it before you close the page.": ["Echipa, lucrul, probleme, mâine. Trimite-l înainte să închizi pagina.", "Ekipa, praca, problemy, jutro. Wyślij przed zamknięciem strony."], "type how many": ["scrie câți", "wpisz ilu"], "worked on this job, in the box under Who did it": ["au lucrat la această lucrare, în căsuța de sub Cine a făcut-o", "pracowało przy tej pracy, w polu pod Kto wykonał"], "Tick the crew who did this job. Change the number if not all of them worked on it.": ["Bifează echipa care a făcut lucrarea. Schimbă numărul dacă nu au lucrat toți.", "Zaznacz ekipę, która wykonała pracę. Zmień liczbę, jeśli nie pracowali wszyscy."], "Steel erectors on site but not used?": ["Montatori pe șantier dar nefolosiți?", "Monterzy na budowie, ale niewykorzystani?"], "For example no IPAF or no qualification.": ["De exemplu fără IPAF sau fără calificare.", "Na przykład brak IPAF lub brak uprawnień."], "How many for each reason": ["Câți pentru fiecare motiv", "Ilu z każdego powodu"], "Type a number next to the reason. Leave the rest empty.": ["Scrie un număr lângă motiv. Lasă restul gol.", "Wpisz liczbę przy powodzie. Resztę zostaw pustą."], "Other reason": ["Alt motiv", "Inny powód"], "No IPAF": ["Fără IPAF", "Brak IPAF"], "No qualification or card": ["Fără calificare sau card", "Brak uprawnień lub karty"], "No site induction": ["Fără instructaj de șantier", "Brak szkolenia wstępnego"], "No PPE": ["Fără echipament de protecție", "Brak środków ochrony"], "No work for them": ["Nu e lucru pentru ei", "Brak pracy dla nich"], "No machine for them": ["Nu e utilaj pentru ei", "Brak maszyny dla nich"], "Steel erectors not used: Yes or No": ["Montatori nefolosiți: Da sau Nu", "Monterzy niewykorzystani: Tak lub Nie"], "Steel erectors not working as steel erectors?": ["Montatori care nu lucrează ca montatori?", "Monterzy niepracujący jako monterzy?"], "For example used as spotters: no IPAF, no qualification, or they do not know the job.": ["De exemplu folosiți ca semnalizatori: fără IPAF, fără calificare sau nu știu meseria.", "Na przykład użyci jako sygnaliści: brak IPAF, brak uprawnień lub nie znają pracy."], "What did they do instead? Tap all that apply": ["Ce au făcut în schimb? Apasă tot ce se potrivește", "Co robili zamiast tego? Zaznacz wszystko, co pasuje"], "Labourer or logistics": ["Necalificat sau logistică", "Pomocnik lub logistyka"], "Sent home": ["Trimis acasă", "Odesłany do domu"], "Does not know the job": ["Nu știe meseria", "Nie zna pracy"], "What did they do instead": ["Ce au făcut în schimb", "Co robili zamiast tego"], "Evening": ["Seara", "Wieczór"], "My crew": ["Echipa mea", "Moja ekipa"], "Work done": ["Lucru făcut", "Wykonana praca"], "Morning: tap Morning, fill in your crew, Check and send.": ["Dimineața: apasă Dimineața, completează echipa, Verifică și trimite.", "Rano: naciśnij Rano, wpisz ekipę, Sprawdź i wyślij."], "Evening: tap Evening, fill in the work done, Check and send.": ["Seara: apasă Seara, completează lucrul făcut, Verifică și trimite.", "Wieczorem: naciśnij Wieczór, wpisz wykonaną pracę, Sprawdź i wyślij."], "Morning: tap Morning": ["Dimineața: apasă Dimineața", "Rano: naciśnij Rano"], "Fill in your crew by company and how many. Check and send.": ["Completează echipa pe firme și câți. Verifică și trimite.", "Wpisz ekipę według firm i ilu. Sprawdź i wyślij."], "Evening: tap Evening": ["Seara: apasă Seara", "Wieczorem: naciśnij Wieczór"], "Your morning crew is already there. Fill in the work done, problems and tomorrow. Check and send.": ["Echipa de dimineață e deja acolo. Completează lucrul făcut, problemele și ce trebuie mâine. Verifică și trimite.", "Poranna ekipa już tam jest. Wpisz wykonaną pracę, problemy i jutro. Sprawdź i wyślij."], "Choose WhatsApp and the site manager.": ["Alege WhatsApp și șeful de șantier.", "Wybierz WhatsApp i kierownika budowy."], "Two reports a day, sent to the site manager on WhatsApp: morning crew and evening work.": ["Două rapoarte pe zi, trimise șefului de șantier pe WhatsApp: echipa dimineața și lucrul seara.", "Dwa raporty dziennie, wysyłane kierownikowi budowy na WhatsApp: rano ekipa, wieczorem praca."], "This morning's crew is filled in. Change it if anyone left or came.": ["Echipa de azi-dimineață e completată. Schimb-o dacă a plecat sau a venit cineva.", "Poranna ekipa jest wpisana. Zmień, jeśli ktoś wyszedł lub doszedł."], "Steel erectors not working as steel erectors: Yes or No": ["Montatori care nu lucrează ca montatori: Da sau Nu", "Monterzy niepracujący jako monterzy: Tak lub Nie"], "Which crew, why, how many": ["Ce echipă, de ce, câți", "Która ekipa, dlaczego, ilu"], "One line per crew and reason. Add a line for each company.": ["Câte o linie pentru fiecare echipă și motiv. Adaugă o linie pentru fiecare firmă.", "Jedna linia na ekipę i powód. Dodaj linię dla każdej firmy."], "+ Add another line": ["+ Adaugă încă o linie", "+ Dodaj kolejną linię"], "Line": ["Linia", "Linia"], "Why": ["De ce", "Dlaczego"], "Used as": ["Folosit ca", "Użyty jako"], "Which crew, why and how many": ["Ce echipă, de ce și câți", "Która ekipa, dlaczego i ilu"], "which crew": ["ce echipă", "która ekipa"], "why": ["de ce", "dlaczego"], "write the other reason": ["scrie celălalt motiv", "wpisz inny powód"], "how many": ["câți", "ilu"], "used as": ["folosit ca", "użyty jako"], "Type how many next to the reason": ["Scrie câți lângă motiv", "Wpisz ilu przy powodzie"], "Write the other reason": ["Scrie celălalt motiv", "Wpisz inny powód"], "Today's output: must answer": ["Producția de azi: răspuns obligatoriu", "Dzisiejsza praca: odpowiedź obowiązkowa"], "Steel installed today?": ["Oțel montat azi?", "Stal zamontowana dzisiaj?"], "Decking installed today?": ["Tablă cutată montată azi?", "Blacha trapezowa zamontowana dzisiaj?"], "If Yes: add a work line below and type the pieces and the weight in kg.": ["Dacă Da: adaugă mai jos o linie de lucru și scrie bucățile și greutatea în kg.", "Jeśli Tak: dodaj poniżej linię pracy i wpisz sztuki oraz wagę w kg."], "Decking pieces installed": ["Bucăți de tablă cutată montate", "Zamontowane sztuki blachy trapezowej"], "pieces, whole numbers only": ["bucăți, doar numere întregi", "sztuki, tylko liczby całkowite"], "Total on your work lines": ["Total pe liniile tale de lucru", "Razem w twoich liniach pracy"], "Now add a work line for it below": ["Acum adaugă mai jos o linie de lucru pentru asta", "Teraz dodaj poniżej linię pracy"], "Steel installed today: Yes or No": ["Oțel montat azi: Da sau Nu", "Stal zamontowana dzisiaj: Tak lub Nie"], "Decking installed today: Yes or No": ["Tablă cutată montată azi: Da sau Nu", "Blacha trapezowa zamontowana dzisiaj: Tak lub Nie"], "You said Yes to steel: add a steel work line with the pieces and the weight in kg": ["Ai spus Da la oțel: adaugă o linie de lucru cu oțel, cu bucățile și greutatea în kg", "Zaznaczyłeś Tak dla stali: dodaj linię pracy ze stalą, ze sztukami i wagą w kg"], "You said Yes to decking: add a decking work line with the pieces and the weight in kg": ["Ai spus Da la tablă cutată: adaugă o linie de lucru cu tablă, cu bucățile și greutatea în kg", "Zaznaczyłeś Tak dla blachy: dodaj linię pracy z blachą, ze sztukami i wagą w kg"], "You said No to steel, but a work line has steel pieces or weight. Check.": ["Ai spus Nu la oțel, dar o linie de lucru are bucăți sau greutate de oțel. Verifică.", "Zaznaczyłeś Nie dla stali, ale linia pracy ma sztuki lub wagę stali. Sprawdź."], "You said No to decking, but a work line has decking pieces or weight. Check.": ["Ai spus Nu la tablă cutată, dar o linie de lucru are bucăți sau greutate de tablă. Verifică.", "Zaznaczyłeś Nie dla blachy, ale linia pracy ma sztuki lub wagę blachy. Sprawdź."], "Welding": ["Sudură", "Spawanie"], "Decking handrails": ["Balustrade la tabla cutată", "Balustrady przy blasze trapezowej"], "CPH04 Admin": ["CPH04 Admin", "CPH04 Admin"], "CPH04 Colo 1": ["CPH04 Colo 1", "CPH04 Colo 1"], "CPH04 Colo 2": ["CPH04 Colo 2", "CPH04 Colo 2"], "CPH04 Colo 3": ["CPH04 Colo 3", "CPH04 Colo 3"], "CPH04 Gantry": ["CPH04 Gantry", "CPH04 Gantry"], "CPH03 Colo 4": ["CPH03 Colo 4", "CPH03 Colo 4"], "CPH03 Colo 5": ["CPH03 Colo 5", "CPH03 Colo 5"], "CPH03 RAB wall North": ["CPH03 Perete RAB Nord", "CPH03 Ściana RAB Północ"], "CPH03 RAB wall South": ["CPH03 Perete RAB Sud", "CPH03 Ściana RAB Południe"], "CPH03 RAB wall East": ["CPH03 Perete RAB Est", "CPH03 Ściana RAB Wschód"], "CPH03 RAB wall West": ["CPH03 Perete RAB Vest", "CPH03 Ściana RAB Zachód"]};
+let lang="en"; try{lang=localStorage.getItem("csk-bh-lang")||"en";}catch(e){}
+function tr(x){if(lang==="en")return x;const v=I18N[x];return v?v[lang==="ro"?0:1]:x;}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function applyLang(){
+  document.documentElement.lang=lang;
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest("script,style,pre,textarea,#sheet,#toast,[data-dyn]")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  let n; while((n=w.nextNode())){ if(n.__en===undefined) n.__en=n.nodeValue; const raw=n.__en, t=raw.trim(); if(!t) continue; n.nodeValue=raw.replace(t,tr(t)).replace(/Sisk/g,MC); }
+  document.querySelectorAll("[placeholder]").forEach(el=>{if(el.closest("#sheet,[data-dyn]"))return; if(el.__ph===undefined) el.__ph=el.getAttribute("placeholder"); el.setAttribute("placeholder",tr(el.__ph));});
+  document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
+}
+
+const COMPANIES=uniq(SITE.companies,["Other"]);
+const JOBS=["Steel erectors","Black hats","Spotters","Painters","Deckers","Touch-up / fire caps","Logistics","Crane operator","Plant operators","Fitters","Labourers","Surveyor","Other"];
+const STEEL=["Main steel","Gantry steel","Hanging steel","Secondary steel","Bracings","Purlins","Door / window steel","Parapet steel","Stairs and handrails"];
+const DECK=["Decking / roof plates","Edge trims and closures"];
+const DECKO=["Decking handrails"]; /* listed under Decking, reported as Finished / Part done, not in the decking kg */
+const OTHER=["Touch-up painting","Fire caps","Bolting / torque","Survey / alignment","Netting","Spotting / banksman","Deliveries / offloading","Logistics / material moves","Housekeeping","Snagging","Other work"];
+const WHEN=[["Day","All day"],["AM","Morning"],["PM","Afternoon"]];
+const MACHINES=["Boom MEWP","Scissor lift","Spider MEWP","Spider crane","HIAB crane","Mobile crane","Telehandler","Forklift"];
+const IDLE=["No IPAF","No relevant qualification or card","Does not know the job","No site induction","CSK management: other area","CSK management: other tasks","No work for them","No machine for them","Other"];
+const IDLEAS=["Spotter","Labourer or logistics","Other area","Other tasks","Sent home","Nothing"];
+const newIdle=()=>({id:uid(),c:"",r:"",note:"",n:"",as:"",when:""});
+const PROBS=["Missing","Damaged","Wrong piece","Holes do not fit","Not painted","Other"];
+const TRADES=uniq(SITE.trades,["Other"]);
+const AREAS=uniq(SITE.areas,["Other","N/A"]);
+const _k=0;
+const KEEP=["name","mach","noMach"];
+const TEXT=["name","comments","brokeMach","brokeNote","brokeFleet","stopHours","stopWhy","stopMen","instrWho","instrWhat","needArea","permitNote"];
+const CHIPS=["steelYN","deckYN","bolted","reached","hasMissing","hasBroke","hasStop","hasInstr","stopWho","noMach","instrBy","permitYN"];
+const MULTI=["tomorrow","brokeWhat","instrKind","alsoAs","permits"];
+const KEY="csk-bh-draft-1791389621"; const LAST="csk-bh-lastcrew"; const MORN="csk-bh-morning";
+try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i); if(k&&(k.startsWith("csk-bh-report")||(k.startsWith("csk-bh-draft-")&&k!==KEY))) localStorage.removeItem(k);}}catch(e){}
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,8);
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dmy(iso){const [y,m,d]=iso.split("-");return `${d}/${m}/${y}`;}
+const newCrew=g=>({id:uid(),g:g||uid(),co:"",job:"",n:"",h:"",idleYN:"",idle:[]});
+const newWork=()=>({id:uid(),area:"",act:"",who:[],when:"",target:"",pcs:"",w:"",unit:"",gl:"",done:"",m2:""});
+const newMark=()=>({m:"",p:""});
+const newMore=()=>({job:"",n:""});
+let S={mode:new Date().getHours()<12?"AM":"PM",date:today(),marks:[newMark()],crew:[newCrew()],work:[newWork()],mach:{}};
+const isSteel=a=>STEEL.includes(a), isDeck=a=>DECK.includes(a);
+function outTot(f){const l=S.work.filter(w=>f(w.act)); return {n:l.length,pcs:l.reduce((a,w)=>a+(parseInt(w.pcs)||0),0),kg:l.reduce((a,w)=>a+(parseFloat(String(w.w||"").replace(",","."))||0),0)};}
+function outSum(){[["steelSum",isSteel,"steelYN"],["deckSum",isDeck,"deckYN"]].forEach(([id,f,k])=>{const el=document.getElementById(id); if(!el) return; const t=outTot(f);
+  el.textContent=S[k]==="Yes"?(t.n?`${tr("Total on your work lines")}: ${t.pcs} pcs, ${Math.round(t.kg)} kg (${Math.round(t.kg/10)/100} T)`:tr("Now add a work line for it below")):"";});}
+
+function load(){
+  /* only today's unfinished draft is kept, so the form is always plain at the start of a day */
+  try{localStorage.removeItem(KEY);}catch(e){}
+  if(!S.marks||!S.marks.length) S.marks=[newMark()]; S.marks=S.marks.map(m=>typeof m==="string"?{m,p:""}:m); if(!S.mach||typeof S.mach!=="object") S.mach={}; MULTI.forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];}); if(!S.crew||!S.crew.length) S.crew=[newCrew()]; if(!S.work||!S.work.length) S.work=[newWork()];
+}
+function saveMorning(){try{localStorage.setItem(MORN,JSON.stringify({alsoAs:S.alsoAs||[],otherCo:S.otherCo||"",otherTrade:S.otherTrade||{},teamH:S.teamH||"",date:S.date,name:S.name,crew:S.crew.filter(c=>c.co&&c.job).map(c=>({...c})),mach:{...S.mach},noMach:S.noMach||""}));}catch(e){}}
+function morningFill(){ if(S.mode!=="PM"||S.crew.some(c=>c.co||c.job)) return false; let M=null; try{M=JSON.parse(localStorage.getItem(MORN)||"null");}catch(e){}
+  if(!M||M.date!==S.date||!M.crew||!M.crew.length) return false;
+  S.name=S.name||M.name; S.crew=M.crew; S.cos=undefined; S.otherCo=M.otherCo||""; S.otherTrade=M.otherTrade||{}; S.alsoAs=M.alsoAs||[]; S.mach=M.mach||{}; S.noMach=M.noMach||""; return true;}
+function setMode(m){S.mode=m; const f=morningFill(); render(); applyLang(); window.scrollTo(0,0); if(f) toast(tr("This morning's crew is filled in. Change it if anyone left or came."));}
+function hasLast(){try{return !!localStorage.getItem(LAST);}catch(e){return false;}}
+function saveLast(){try{localStorage.setItem(LAST,JSON.stringify({name:S.name,crew:S.crew.filter(c=>c.co&&c.job).map(c=>({...c,idleYN:"",idle:[]})),mach:{...S.mach},noMach:S.noMach||"",
+  work:S.work.filter(w=>w.area||w.act).map(w=>({...newWork(),id:w.id,area:w.area,act:w.act,who:[...w.who],when:w.when}))}));}catch(e){}}
+function useLast(){let L=null;try{L=JSON.parse(localStorage.getItem(LAST)||"null");}catch(e){} if(!L) return;
+  S.name=L.name||S.name; if(L.crew&&L.crew.length){S.crew=L.crew;S.cos=undefined;} S.mach=L.mach||{}; S.noMach=L.noMach||""; if(L.work&&L.work.length) S.work=L.work;
+  save(); render(); toast(tr("Crew and work lines filled in. Type today's numbers."));}
+function save(){ schedProgress(); } /* nothing typed is stored: the form opens plain every time */
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2400);}
+const opt=(list,v)=>`<option value="">${esc(tr("Choose"))}</option>`+list.map(o=>`<option value="${esc(o)}"${o===v?" selected":""}>${esc(tr(o))}</option>`).join("");
+const coName=co=>co==="Other"?(String(S.otherCo||"").trim()||"Other company"):co;
+const tradeName=c=>c.job==="Other"?(String((S.otherTrade||{})[c.co]||"").trim()||"Other trade"):c.job;
+const crewName=c=>`${coName(c.co||"?")} ${tr(tradeName(c)||"?")}${c.n?" ("+c.n+")":""}`;
+
+function groups(){S.crew.forEach(c=>{if(!c.g)c.g=c.id;}); const order=[]; S.crew.forEach(c=>{if(!order.includes(c.g))order.push(c.g);}); return order.map(g=>({g,list:S.crew.filter(c=>c.g===g)}));}
+function crewLabel(g,gi){const c=S.crew.find(x=>x.g===g);return `${tr("Crew")} ${gi+1}${c&&c.co?" "+c.co:""}${c&&c.gname?" ("+c.gname+")":""}`;}
+function jobName(g,gi){const c=S.crew.find(x=>x.g===g);return (c&&c.gname)?c.gname:`${tr("Job")} ${gi+1}`;}
+const live=c=>parseInt(c.n)>0;
+function teamCos(){ if(!Array.isArray(S.cos)) S.cos=[...new Set(S.crew.filter(c=>c.co&&live(c)).map(c=>c.co))]; return S.cos; }
+function drawCrew(){
+  const cos=teamCos();
+  $("#coChips").innerHTML=COMPANIES.map(co=>`<button type="button" data-team="${esc(co)}" aria-pressed="${cos.includes(co)}">${cos.includes(co)?"\u2713 ":""}${esc(co)}</button>`).join("");
+  $("#crewList").innerHTML=cos.map(co=>`<div class="line comp" data-grp="${esc(co)}">
+    <div class="lh"><span>${esc(co==="Other"?tr("Other company"):co)}</span></div>
+    ${co==="Other"?`<div><label>${esc(tr("Company name"))}</label><div class="hint">${esc(tr("Write in English if you can. Short words."))}</div><input data-otherco="1" value="${esc(S.otherCo||"")}" placeholder="${esc(tr("Type the company name"))}"></div>`:""}
+    ${S.mode!=="AM"?`<div style="max-width:55%"><label>${esc(tr("Hours each"))}</label><input data-coh="${esc(co)}" inputmode="decimal" value="${esc((S.coH||{})[co]||"")}"></div>`:""}
+    <div class="machs">${TRADES.map(J=>{const c=S.crew.find(x=>x.co===co&&x.job===J);return `<label class="mach"><span>${esc(tr(J))}</span><input data-tn="${esc(co)}|${esc(J)}" inputmode="numeric" value="${esc(c&&live(c)?c.n:"")}" aria-label="${esc(co+" "+tr(J))}"></label>`;}).join("")}</div>
+    <div><label>${esc(tr("Other trade: what is it? (only if you typed a number next to Other)"))}</label><input data-othertrade="${esc(co)}" value="${esc((S.otherTrade||{})[co]||"")}"></div></div>`).join("")
+   +(cos.length?`<div class="f" data-f="alsoAs" style="margin-top:6px"><label>${esc(tr("You, the black hat: are you also working as"))}</label><div class="hint">${esc(tr("Count yourself once, under Black hats. These ticks do not add a person."))}</div><div class="chips" data-multi="alsoAs">${["Rigger","Crane operator","Spotter","Banksman"].map(v=>`<button type="button" data-v="${v}" aria-pressed="${(S.alsoAs||[]).includes(v)}">${esc(tr(v))}</button>`).join("")}</div></div>`:"");
+  crewSum();
+}
+function setRow(co,J,v){ let c=S.crew.find(x=>x.co===co&&x.job===J); if(!c){c=newCrew("team");c.co=co;c.job=J;S.crew.push(c);} c.n=v; c.h=(S.coH||{})[co]||""; S.crew=S.crew.filter(x=>x.co&&x.job||x===c); }
+function tidyTeam(){ const dead=S.crew.filter(c=>!(c.co&&c.job&&live(c)&&teamCos().includes(c.co))); S.crew=S.crew.filter(c=>!dead.includes(c)); S.work.forEach(w=>w.who=w.who.filter(id=>S.crew.some(c=>c.id===id))); }
+function setTrade(g,J,v){ const list=S.crew.filter(c=>c.g===g); const f=list[0]; let c=list.find(x=>x.job===J);
+  if(!c){ if(!f.job){c=f;} else {c=newCrew(g); c.co=f.co; c.gname=f.gname||""; c.h=f.h||""; const last=S.crew.map(x=>x.g).lastIndexOf(g); S.crew.splice(last+1,0,c);} c.job=J; }
+  c.n=v; }
+function tidyGroup(g){ const list=S.crew.filter(c=>c.g===g); const keep=list.filter(live); const drop=list.filter(c=>!live(c));
+  if(!keep.length){ drop.slice(1).forEach(c=>{S.crew=S.crew.filter(x=>x!==c);}); if(drop[0]){drop[0].job="";drop[0].n="";} }
+  else drop.forEach(c=>{S.crew=S.crew.filter(x=>x!==c); S.work.forEach(w=>w.who=w.who.filter(x=>x!==c.id));}); }
+function jobNameEn(g,gi){const c=S.crew.find(x=>x.g===g);return `Crew ${gi+1}${c&&c.co?" "+c.co:""}${c&&c.gname?" ("+c.gname+")":""}`;}
+function tradeTotals(){const t={}; S.crew.filter(c=>c.job&&parseInt(c.n)>0).forEach(c=>{t[tradeName(c)]=(t[tradeName(c)]||0)+parseInt(c.n);}); return t;}
+function coTotals(){const t={}; S.crew.filter(c=>c.co&&parseInt(c.n)>0).forEach(c=>{t[coName(c.co)]=(t[coName(c.co)]||0)+parseInt(c.n);}); return t;}
+function crewSum(){const t=S.crew.reduce((a,c)=>a+(parseInt(c.n)||0),0); const el=$("#crewSum"); if(!t){el.innerHTML="";return;}
+  const T=tradeTotals(), C=coTotals();
+  el.innerHTML=`<div class="tot"><div class="totbig">${esc(tr("Total on site"))}: ${t}</div>
+   <div><b>${esc(tr("By trade"))}</b>${Object.entries(T).map(([k,v])=>`<div class="totrow"><span>${esc(tr(k))}</span><span>${v}</span></div>`).join("")}</div>
+   <div><b>${esc(tr("By company"))}</b>${Object.entries(C).map(([k,v])=>`<div class="totrow"><span>${esc(k)}</span><span>${v}</span></div>`).join("")}</div></div>`;}
+function drawWork(){
+  const acts=`<optgroup label="${esc(tr("Steel"))}">${STEEL.map(o=>`<option value="${esc(o)}">${esc(tr(o))}</option>`).join("")}</optgroup><optgroup label="${esc(tr("Decking"))}">${DECK.concat(DECKO).map(o=>`<option value="${esc(o)}">${esc(tr(o))}</option>`).join("")}</optgroup><optgroup label="${esc(tr("Other work"))}">${OTHER.map(o=>`<option value="${esc(o)}">${esc(tr(o))}</option>`).join("")}</optgroup>`;
+  $("#workList").innerHTML=S.work.map((w,i)=>{
+    const steel=isSteel(w.act);
+    return `<div class="line" data-work="${w.id}">
+    <div class="lh"><span>${esc(tr("Work line"))} ${i+1}</span>${S.work.length>1?`<button type="button" data-delwork="${w.id}">${esc(tr("Remove"))}</button>`:""}</div>
+    <div><label>${esc(tr("Area"))}</label><select data-wf="area">${opt(AREAS,w.area)}</select>${w.area==="Other"?`<input data-wf="areaO" value="${esc(w.areaO||"")}" placeholder="${esc(tr("Type the area"))}" style="margin-top:6px">`:""}</div>
+    <div><label>${esc(tr("What"))}</label><select data-wf="act"><option value="">${esc(tr("Choose"))}</option>${acts.replace(`value="${esc(w.act)}"`,`value="${esc(w.act)}" selected`)}</select></div>
+    <div><label>${esc(tr("Who did it"))}</label><div class="hint" style="font-size:13px;color:var(--muted);margin-bottom:4px">${esc(tr("Tap Tick whole team, or tick each trade. Change a number only if someone was elsewhere."))}</div><div class="who">${(()=>{const L=S.crew.filter(c=>c.co&&c.job&&live(c)); if(!L.length) return `<span class="crewsum">${esc(tr("Fill in the crew first"))}</span>`; const all=L.every(c=>w.who.includes(c.id));
+      return `<div class="whojob"><button type="button" class="jobtick" data-whojob="${w.id}|team" aria-pressed="${all}">${all?"\u2713 ":""}${esc(tr("Tick whole team"))}</button>${L.map(c=>{const on=w.who.includes(c.id);return `<div class="whorow${on?" on":""}"><button type="button" class="whotick" data-who="${w.id}|${c.id}" aria-pressed="${on}"><span class="box">${on?"\u2713":""}</span>${esc(coName(c.co)+" "+tr(tradeName(c)))}</button>${on?`<label class="hn">${esc(tr("How many"))}<input data-whon="${w.id}|${c.id}" inputmode="numeric" value="${esc((w.whoN||{})[c.id]||"")}"></label>`:""}</div>`;}).join("")}</div>`;})()}</div></div>
+    <div><label>${esc(tr("When"))}</label><div class="chips">${WHEN.map(([v,l])=>`<button type="button" data-when="${w.id}|${v}" aria-pressed="${w.when===v}">${esc(tr(l))}</button>`).join("")}</div></div>
+    ${(steel||isDeck(w.act))?`<div class="outbox"><div class="row2"><div><label>${esc(tr(steel?"Pieces installed":"Decking pieces installed"))} *</label><input data-wf="pcs" inputmode="numeric" value="${esc(w.pcs)}"></div>
+      <div><label>${esc(tr("Weight installed (kg)"))} *</label><input data-wf="w" inputmode="decimal" value="${esc(w.w)}"></div></div></div>`
+     :w.act?`<div><label>${esc(tr("How far"))}</label><div class="chips">${["Finished","Part done","Not started"].map(v=>`<button type="button" data-done="${w.id}|${v}" aria-pressed="${w.done===v}">${esc(tr(v))}</button>`).join("")}</div></div>`:""}
+    </div>`;}).join("");
+}
+function render(){
+  const d=new Date(S.date+"T12:00:00");
+  $("#dateLine").textContent=d.toLocaleDateString(lang==="ro"?"ro-RO":lang==="pl"?"pl-PL":"en-GB",{weekday:"long"});
+  const rd=$("#repDate"); rd.max=today(); if(document.activeElement!==rd) rd.value=S.date; $("#lateNote").hidden=S.date===today();
+  TEXT.forEach(k=>{const el=document.getElementById(k); if(el&&document.activeElement!==el) el.value=S[k]||"";});
+  CHIPS.forEach(k=>document.querySelectorAll(`[data-chip="${k}"] button`).forEach(b=>b.setAttribute("aria-pressed",String(S[k]===b.dataset.v))));
+  MULTI.forEach(k=>document.querySelectorAll(`[data-multi="${k}"] button`).forEach(b=>b.setAttribute("aria-pressed",String((S[k]||[]).includes(b.dataset.v)))));
+  const am=S.mode==="AM"; document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
+  document.querySelectorAll("section.step").forEach((sec,i)=>{if(i>0&&sec.id!=="commentsSec") sec.hidden=am;});
+  $("#permitBox").hidden=S.permitYN!=="Yes";
+  $("[data-f=needArea]").hidden=!(S.tomorrow||[]).some(x=>x!=="Nothing");
+  $("#missingBox").hidden=S.hasMissing!=="Y"; $("#stopBox").hidden=S.hasStop!=="Y"; $("#brokeBox").hidden=S.hasBroke!=="Y"; $("#instrBox").hidden=S.hasInstr!=="Y";
+  $("#useLastBtn").hidden=!(hasLast()&&!S.name&&!S.crew.some(c=>c.co||c.job));
+  drawCrew(); drawWork(); drawMarks(); drawMore(); updateMissBar(); progress();
+}
+function drawMore(){ const on=(S.tomorrow||[]).includes("More people"); $("#moreBox").hidden=!on; if(!on) return; if(!Array.isArray(S.more)||!S.more.length) S.more=[newMore()];
+  $("#moreList").innerHTML=S.more.map((m,i)=>`<div class="mark" data-morel="${i}"><select data-morej="${i}" style="flex:1.6">${opt(TRADES,m.job)}</select><input data-moren="${i}" inputmode="numeric" value="${esc(m.n)}" placeholder="${esc(tr("How many"))}" aria-label="${esc(tr("How many"))}" style="flex:.7;text-transform:none">${S.more.length>1?`<button type="button" data-delmore="${i}" aria-label="X">X</button>`:""}</div>`).join("");}
+const moreRows=()=>(Array.isArray(S.more)?S.more:[]).filter(m=>m.job||m.n);
+function drawMarks(){
+  $("#marks").innerHTML=S.marks.map((m,i)=>`<div class="mark"><input data-mark="${i}" value="${esc(m.m)}" aria-label="${i+1}" autocapitalize="characters"><select data-markp="${i}">${opt(PROBS,m.p)}</select>${S.marks.length>1?`<button type="button" data-delmark="${i}" aria-label="X">X</button>`:""}</div>`).join("");
+}
+function drawMach(){
+  $("#machList").innerHTML=MACHINES.map(m=>`<label class="mach"><span>${esc(tr(m))}</span><input data-mach="${esc(m)}" inputmode="numeric" value="${esc(S.mach[m]||"")}" aria-label="${esc(tr(m))}"></label>`).join("");
+}
+const isSE=c=>c.job==="Steel erectors";
+function idleBlock(c){ if(!isSE(c)) return ""; c.idle=Array.isArray(c.idle)?c.idle:[]; const yes=c.idleYN==="Yes"; if(yes&&!c.idle.length) c.idle=[newIdle()];
+  return `<div class="cidle"><label>${esc(tr("Any of them not working as steel erectors?"))}</label>
+  <div class="chips">${["No","Yes"].map(v=>`<button type="button" data-cidle="${c.id}|${v}" aria-pressed="${c.idleYN===v}">${esc(tr(v))}</button>`).join("")}</div>
+  ${yes?`<div class="sub">${c.idle.map((x,i)=>`<div class="line" data-ci="${c.id}|${i}">
+    <div class="lh"><span>${esc(tr("Reason"))} ${i+1}</span>${c.idle.length>1?`<button type="button" data-delci="${c.id}|${i}">${esc(tr("Remove"))}</button>`:""}</div>
+    <div><label>${esc(tr("Why"))}</label><select data-cif="r">${opt(IDLE,x.r)}</select></div>
+    ${x.r==="Other"?`<div><label>${esc(tr("Other reason"))}</label><input data-cif="note" value="${esc(x.note)}"></div>`:""}
+    <div class="row2"><div><label>${esc(tr("How many"))}</label><input data-cif="n" inputmode="numeric" value="${esc(x.n)}"></div>
+    <div><label>${esc(tr("Used as"))}</label><select data-cif="as">${opt(IDLEAS,x.as)}</select></div></div>
+    <div><label>${esc(tr("How long"))}</label><div class="chips">${WHEN.map(([v,l])=>`<button type="button" data-ciw="${c.id}|${i}|${v}" aria-pressed="${x.when===v}">${esc(tr(l))}</button>`).join("")}</div></div></div>`).join("")}
+    <button type="button" class="addline" data-addci="${c.id}">+ ${esc(tr("Add another reason"))}</button></div>`:""}</div>`;}
+const idleOf=(c,h)=>0&&(isSE(c)&&c.idleYN==="Yes")?(c.idle||[]).filter(x=>x.when===h||x.when==="Day").reduce((a,x)=>a+(parseInt(x.n)||0),0):0;
+const idleRows=()=>[]||S.crew.filter(c=>isSE(c)&&c.idleYN==="Yes").flatMap(c=>(c.idle||[]).filter(x=>x.r||x.n||x.as).map(x=>({...x,c:c.id})));
+const idleTotal=()=>idleRows().reduce((a,x)=>a+(parseInt(x.n)||0),0);
+const idleText=()=>idleRows().map(x=>{const c=crewOf(x.c);return `${x.n||"?"} ${c?c.co:"?"} (${x.r==="Other"&&x.note?x.note:x.r||"?"}, used as ${(x.as||"?").toLowerCase()}, ${WHEN_EN[x.when]||"?"})`;}).join("; ");
+const machText=()=>MACHINES.filter(m=>parseInt(S.mach[m])>0).map(m=>`${parseInt(S.mach[m])} ${m}`).join(", ");
+const crewOf=id=>S.crew.find(c=>c.id===id), workOf=id=>S.work.find(w=>w.id===id);
+
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.moren!==undefined){S.more[+t.dataset.moren].n=t.value;save();clearMiss($("[data-f=more]"));return;}
+  if(t.dataset.mark!==undefined){S.marks[+t.dataset.mark].m=t.value.toUpperCase();save();return;}
+  if(t.dataset.cif&&t.tagName==="INPUT"){const [cid,i]=t.closest("[data-ci]").dataset.ci.split("|");crewOf(cid).idle[+i][t.dataset.cif]=t.value;save();return;}
+  if(t.dataset.mach){S.mach[t.dataset.mach]=t.value;if(parseInt(t.value)>0&&S.noMach){S.noMach="";render();}save();return;}
+  if(t.dataset.whon){const [wid,cid]=t.dataset.whon.split("|");const w=workOf(wid);w.whoN=w.whoN||{};w.whoN[cid]=t.value;t.closest(".whorow")?.classList.remove("missbox");save();return;}
+  if(t.dataset.tn){const [co,J]=t.dataset.tn.split("|");setRow(co,J,t.value);save();crewSum();clearMiss(t.closest(".line.comp"));clearMiss($("[data-f=crew]"));return;}
+  if(t.dataset.otherco){S.otherCo=t.value;save();clearMiss(t.closest(".line.comp"));return;}
+  if(t.dataset.othertrade){S.otherTrade=S.otherTrade||{};S.otherTrade[t.dataset.othertrade]=t.value;save();clearMiss(t.closest(".line.comp"));return;}
+  if(t.dataset.coh){S.coH=S.coH||{};S.coH[t.dataset.coh]=t.value;S.crew.filter(c=>c.co===t.dataset.coh).forEach(c=>c.h=t.value);save();return;}
+  if(t.dataset.gn){const [g,J]=t.dataset.gn.split("|");setTrade(g,J,t.value);save();crewSum();clearMiss(t.closest(".line.comp"));clearMiss($("[data-f=crew]"));return;}
+  if(t.dataset.gh){S.crew.filter(c=>c.g===t.dataset.gh).forEach(c=>c.h=t.value);save();return;}
+  if(t.dataset.gname){S.crew.filter(c=>c.g===t.dataset.gname).forEach(c=>c.gname=t.value);save();return;}
+  if(t.dataset.cf){const c=crewOf(t.closest("[data-crew]").dataset.crew);c[t.dataset.cf]=t.value;save();if(t.dataset.cf==="n")crewSum();clearMiss(t.closest(".line.trade"));return;}
+  if(t.dataset.wf&&t.tagName==="INPUT"){workOf(t.closest("[data-work]").dataset.work)[t.dataset.wf]=t.value;save();return;}
+  if(t.id&&TEXT.includes(t.id)){S[t.id]=t.value;save();clearMiss(t.closest(".f"));}
+});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.tn){tidyTeam();save();setTimeout(()=>{crewSum();drawWork();},0);return;}
+  if(t.dataset.gn){const g=t.dataset.gn.split("|")[0];tidyGroup(g);save();setTimeout(()=>{drawCrew();drawWork();},0);return;}
+  if(t.dataset.gco){S.crew.filter(c=>c.g===t.dataset.gco).forEach(c=>c.co=t.value);save();crewSum();drawWork();clearMiss(t.closest(".line.comp"));return;}
+  if(t.id==="repDate"){ if(t.value&&t.value<=today()){S.date=t.value;save();render();} else {t.value=S.date;} return;}
+  if(t.dataset.cif&&t.tagName==="SELECT"){const [cid,i]=t.closest("[data-ci]").dataset.ci.split("|");crewOf(cid).idle[+i][t.dataset.cif]=t.value;save();if(t.dataset.cif==="r")drawCrew();return;}
+  if(t.dataset.morej!==undefined){S.more[+t.dataset.morej].job=t.value;save();clearMiss($("[data-f=more]"));return;}
+  if(t.dataset.markp!==undefined){S.marks[+t.dataset.markp].p=t.value;save();return;}
+  if(t.dataset.cf&&t.tagName==="SELECT"){crewOf(t.closest("[data-crew]").dataset.crew)[t.dataset.cf]=t.value;save();if(t.dataset.cf==="job")drawCrew();else crewSum();drawWork();return;}
+  if(t.dataset.wf&&t.tagName==="SELECT"){workOf(t.closest("[data-work]").dataset.work)[t.dataset.wf]=t.value;save();drawWork();clearMiss(document.querySelector(`[data-work="${t.closest("[data-work]")?.dataset.work}"]`));return;}
+  if(t.id&&TEXT.includes(t.id)){S[t.id]=t.value;save();}});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.lang){lang=b.dataset.lang;try{localStorage.setItem("csk-bh-lang",lang);}catch(e){}applyLang();render();if(b.closest(".welcome"))openWelcome();return;}
+  if(b.dataset.mode){setMode(b.dataset.mode);return;}
+  const chip=b.closest("[data-chip]");
+  if(chip&&!b.closest(".sheet")){const k=chip.dataset.chip;S[k]=(k==="noMach"&&S[k]===b.dataset.v)?"":b.dataset.v;if(k==="noMach"&&S[k])S.mach={};save();const ff=chip.closest(".f");render();clearMiss(ff);return;}
+  const multi=b.closest("[data-multi]");
+  if(multi&&!b.closest(".sheet")){const k=multi.dataset.multi,v=b.dataset.v;let a=S[k]||[];a=a.includes(v)?a.filter(x=>x!==v):[...a,v];
+    if(k==="tomorrow"){if(v==="Nothing"&&a.includes("Nothing"))a=["Nothing"];else a=a.filter(x=>x!=="Nothing"||v==="Nothing");}
+    S[k]=a;save();const ff=multi.closest(".f");render();clearMiss(ff);return;}
+  if(b.dataset.team){const co=b.dataset.team;const cs=teamCos();S.cos=cs.includes(co)?cs.filter(x=>x!==co):[...cs,co];tidyTeam();save();drawCrew();drawWork();clearMiss($("[data-f=crew]"));return;}
+  if(b.dataset.whojob){const [wid,g]=b.dataset.whojob.split("|");const w=workOf(wid);w.whoN=w.whoN||{};const L=S.crew.filter(c=>c.co&&c.job&&live(c));const all=L.every(c=>w.who.includes(c.id));
+    if(all){w.who=w.who.filter(x=>!L.some(c=>c.id===x));} else L.forEach(c=>{if(!w.who.includes(c.id))w.who.push(c.id); if(!w.whoN[c.id]&&c.n){const f=(parseInt(c.n)||0)-idleOf(c,"AM");w.whoN[c.id]=String(f>0?f:c.n);}});
+    save();drawWork();return;}
+  if(b.dataset.who){const [wid,cid]=b.dataset.who.split("|");const w=workOf(wid);w.who=w.who.includes(cid)?w.who.filter(x=>x!==cid):[...w.who,cid];w.whoN=w.whoN||{};const one=crewOf(cid);if(w.who.includes(cid)&&!w.whoN[cid]&&one&&one.n){const f=(parseInt(one.n)||0)-idleOf(one,"AM");w.whoN[cid]=String(f>0?f:one.n);}save();drawWork();return;}
+  if(b.dataset.areana){const w=workOf(b.dataset.areana);w.area=w.area==="N/A"?"":"N/A";save();drawWork();return;}
+  if(b.dataset.when){const [wid,v]=b.dataset.when.split("|");workOf(wid).when=v;save();drawWork();return;}
+  if(b.dataset.done){const [wid,v]=b.dataset.done.split("|");workOf(wid).done=v;save();drawWork();return;}
+  if(b.dataset.unit){const [wid,v]=b.dataset.unit.split("|");workOf(wid).unit=v;save();drawWork();return;}
+  if(b.dataset.addtrade){const f=S.crew.find(c=>c.g===b.dataset.addtrade);const n=newCrew(b.dataset.addtrade);n.co=f?f.co:"";n.gname=f?f.gname||"":"";const last=S.crew.map(c=>c.g).lastIndexOf(b.dataset.addtrade);S.crew.splice(last+1,0,n);save();drawCrew();drawWork();return;}
+  if(b.dataset.delgrp){const ids=S.crew.filter(c=>c.g===b.dataset.delgrp).map(c=>c.id);S.crew=S.crew.filter(c=>c.g!==b.dataset.delgrp);if(!S.crew.length)S.crew=[newCrew()];S.work.forEach(w=>w.who=w.who.filter(x=>!ids.includes(x)));save();drawCrew();drawWork();return;}
+  if(b.dataset.delcrew){S.crew=S.crew.filter(c=>c.id!==b.dataset.delcrew);S.work.forEach(w=>w.who=w.who.filter(x=>x!==b.dataset.delcrew));save();drawCrew();drawWork();return;}
+  if(b.dataset.delwork){S.work=S.work.filter(w=>w.id!==b.dataset.delwork);save();drawWork();return;}
+  if(b.dataset.cidle){const [cid,v]=b.dataset.cidle.split("|");const c=crewOf(cid);c.idleYN=v;save();drawCrew();clearMiss(b.closest(".line"));return;}
+  if(b.dataset.ciw){const [cid,i,v]=b.dataset.ciw.split("|");crewOf(cid).idle[+i].when=v;save();drawCrew();return;}
+  if(b.dataset.addci){crewOf(b.dataset.addci).idle.push(newIdle());save();drawCrew();return;}
+  if(b.dataset.delci){const [cid,i]=b.dataset.delci.split("|");crewOf(cid).idle.splice(+i,1);save();drawCrew();return;}
+  if(b.dataset.delmore!==undefined){S.more.splice(+b.dataset.delmore,1);save();drawMore();return;}
+  if(b.dataset.delmark!==undefined){S.marks.splice(+b.dataset.delmark,1);save();drawMarks();return;}
+  switch(b.id){
+    case "addCrew": S.crew.push(newCrew());save();drawCrew();drawWork();break;
+    case "addWork": {const last=S.work[S.work.length-1]; const w=newWork(); if(last){w.area=last.area;} S.work.push(w);save();drawWork();break;}
+    case "addMore": S.more.push(newMore());save();drawMore();break;
+    case "addMark": S.marks.push(newMark());save();drawMarks();document.querySelector(`[data-mark="${S.marks.length-1}"]`).focus();break;
+    case "checkBtn": check();break;
+    case "clearBtn": if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent=tr("Tap again to clear everything");b.style.color="var(--bad)";break;}
+      try{localStorage.removeItem(KEY);localStorage.removeItem(LAST);localStorage.removeItem(MORN);}catch(e){} S={mode:S.mode,date:today(),marks:[newMark()],crew:[newCrew()],work:[newWork()],mach:{}}; b.dataset.sure="";b.textContent=tr("Clear everything on this phone");b.style.color="";
+      document.querySelectorAll(".missmsg").forEach(x=>x.remove()); document.querySelectorAll(".miss").forEach(x=>x.classList.remove("miss")); render(); window.scrollTo(0,0); toast(tr("Cleared. The form is empty.")); break;
+    case "useLastBtn": useLast(); break;
+    case "nextMiss": goNextMiss(); break;
+    case "helpBtn": openWelcome(); break;
+    case "startBtn": $("#sheet").hidden=true; try{localStorage.setItem("csk-bh-seen","1");}catch(e){} if(!S.name) setTimeout(()=>$("#name").focus(),50); break;
+    case "closeSheet": {$("#sheet").hidden=true; const all=[...document.querySelectorAll(".miss,.missbox")]; const m=all.sort((x,y)=>x.getBoundingClientRect().top-y.getBoundingClientRect().top)[0]; const t=m&&(m.querySelector(".missbox")||m); if(t){t.scrollIntoView({block:t.offsetHeight>500?"start":"center"});} break;}
+    case "copyBtn": copyReport(b);break;
+    case "shareBtn": shareReport(b);break;
+    case "restoreBtn": openRestore();break;
+    case "doRestore": doRestore();break;
+  }
+});
+
+/* the rules that make the report complete */
+function problems(){
+  const p=[]; const need=(k,label,ok)=>{if(!(ok!==undefined?ok:String(S[k]||"").trim()))p.push([k,label]);};
+  need("name","Your name");
+  const cos=teamCos();
+  if(!cos.length) p.push(["crew","Tap the companies in your team"]);
+  cos.forEach(co=>{ if(!S.crew.some(c=>c.co===co&&live(c))) p.push(["grp:"+co,`${coName(co)}: ${tr("type how many next to at least one trade")}`]);
+    if(co==="Other"&&!String(S.otherCo||"").trim()) p.push(["grp:"+co,tr("Type the other company name")]);
+    if(S.crew.some(c=>c.co===co&&c.job==="Other"&&live(c))&&!String((S.otherTrade||{})[co]||"").trim()) p.push(["grp:"+co,`${coName(co)}: ${tr("write what the Other trade is")}`]);});
+  S.crew.forEach((c,i)=>{ if(!(c.co&&isSE(c)&&parseInt(c.n)>0)) return; const K="grp:"+c.g, Lb=`${c.co} ${tr(c.job)}: `;
+    if(c.idleYN!=="Yes") return; const r=(c.idle||[]).filter(x=>x.r||x.n||x.as); if(!r.length) p.push([K,Lb+tr("why and how many not working as steel erectors")]);
+    r.forEach((x,j)=>{const R=Lb+tr("reason")+" "+(j+1)+": "; if(!x.r)p.push([K,R+tr("why")]); if(x.r==="Other"&&!String(x.note).trim())p.push([K,R+tr("write the other reason")]); if(!(parseInt(x.n)>0))p.push([K,R+tr("how many")]); if(!x.as)p.push([K,R+tr("used as")]); if(!x.when)p.push([K,R+tr("how long: all day, morning or afternoon")]);});
+    const tot=r.reduce((a,x)=>a+(parseInt(x.n)||0),0); if(tot>parseInt(c.n)) p.push([K,Lb+tr("more people not working as steel erectors than in the crew line")]);});
+  const work=S.work.filter(w=>w.area||w.act||w.pcs||w.done);
+  if(!work.length) p.push(["work","At least one work line"]);
+  work.forEach((w,i)=>{const L=`${tr("Work line")} ${i+1}: `; const K="work:"+w.id;
+    if(!w.area||(w.area==="Other"&&!String(w.areaO||"").trim())) p.push([K,L+tr("area")]); if(!w.act) p.push([K,L+tr("what was the work")]);
+    if(!w.who.some(id=>parseInt((w.whoN||{})[id])>0)) p.push([K+":who",L+tr("who did it")]);
+    w.who.forEach(cid=>{const c=crewOf(cid); if(c&&!(parseInt((w.whoN||{})[cid])>=0)) p.push([K+":hown:"+cid,L+tr("type how many")+" "+coName(c.co)+" "+tr(tradeName(c))+" "+tr("worked on this job, in the box under Who did it")]);}); if(!w.when) p.push([K,L+tr("when: all day, morning or afternoon")]);
+    if(isSteel(w.act)||isDeck(w.act)){ if(String(w.pcs).trim()==="") p.push([K,L+tr("pieces installed (0 if none)")]);
+      else if(!/^\d+$/.test(String(w.pcs).trim())) p.push([K,L+tr("pieces, whole numbers only")]);
+      if(String(w.w).trim()==="") p.push([K,L+tr("weight installed (0 if none)")]);
+      else if(isNaN(+String(w.w).replace(",","."))) p.push([K,L+tr("weight, numbers only")]);
+      else if(parseInt(w.pcs)>0&&(+String(w.w).replace(",","."))/parseInt(w.pcs)<(isDeck(w.act)?1:2)) p.push([K,L+tr("weight is in kg. Did you type tonnes? Example: 1.5 T = 1500")]);
+ }
+  });
+  [["steelYN","Steel",isSteel],["deckYN","Decking",isDeck]].forEach(([k,nm,f])=>{
+    if(!S[k]){p.push([k,nm==="Steel"?"Steel installed today: Yes or No":"Decking installed today: Yes or No"]);return;}
+    const t=outTot(f);
+    if(S[k]==="Yes"&&!(t.pcs>0&&t.kg>0)) p.push([k,nm==="Steel"?"You said Yes to steel: add a steel work line with the pieces and the weight in kg":"You said Yes to decking: add a decking work line with the pieces and the weight in kg"]);
+    if(S[k]==="No"&&(t.pcs>0||t.kg>0)) p.push([k,nm==="Steel"?"You said No to steel, but a work line has steel pieces or weight. Check.":"You said No to decking, but a work line has decking pieces or weight. Check."]);
+  });
+  if(S.mode==="PM"){ const early=0;
+   S.crew.filter(c=>c.co&&c.job&&parseInt(c.n)>0).forEach(c=>{const n=parseInt(c.n); ["AM","PM"].forEach(h=>{
+    const used=S.work.filter(w=>w.who.includes(c.id)&&(w.when===h||w.when==="Day")).reduce((a,w)=>a+(parseInt((w.whoN||{})[c.id])||0),0);
+    const idle=idleOf(c,h); const got=used+idle; const ok=h==="AM"?got===n:(got<=n&&got>=n-early);
+    if(!ok) p.push(["grp:"+c.g,`${crewName(c)}: ${tr(h==="AM"?"morning":"afternoon")} ${got} ${tr("of")} ${n}. ${tr(got>n?"Too many: check the numbers on the work lines.":"Missing people: put each person on a work line.")}`]);});});}
+  if(S.hasMissing==="Y"){ const ms=S.marks.filter(m=>m.m.trim()); if(!ms.length) p.push(["marks","At least one member number"]); if(ms.some(m=>!m.p)) p.push(["marks","What is wrong with each piece"]); }
+  if(S.hasBroke==="Y"){ need("brokeMach","Which machine broke down"); need("brokeFleet","Machine number"); need("brokeWhat","What is wrong with the machine",(S.brokeWhat||[]).length>0); }
+  if(S.hasStop==="Y"){need("stopHours","Hours lost");need("stopWhy","Why work stopped");need("stopMen","How many men stopped");need("stopWho","Who stopped you",!!S.stopWho);}
+  if(S.hasInstr==="Y"){need("instrBy","Who gave the instruction",!!S.instrBy);need("instrKind","What the instruction was",(S.instrKind||[]).length>0);}
+
+  if((S.tomorrow||[]).includes("More people")){const r=moreRows(); if(!r.length) p.push(["more","More people: which trade and how many"]); r.forEach((m,i)=>{if(!m.job||!(parseInt(m.n)>0)) p.push(["more",`${tr("More people")} ${i+1}: ${tr("trade and how many")}`]);});}
+  need("permitYN","Permits needed for tomorrow: Yes or No",!!S.permitYN);
+  if(S.permitYN==="Yes") need("permits","Which permits are needed tomorrow",(S.permits||[]).length>0);
+  if(S.mode==="AM") return p.filter(([k])=>SEC[1].test(k)&&!/^early/.test(k));
+  return p;
+}
+function instrText(){return `${S.instrBy||"?"}${S.instrWho?" ("+S.instrWho+")":""}: ${(S.instrKind||[]).join(", ")}${S.instrWhat?". Note: "+S.instrWhat:""}`;}
+function brokeText(){return [S.brokeMach||"?",S.brokeFleet?"no. "+S.brokeFleet:"",(S.brokeWhat||[]).map(x=>x.toLowerCase()).join(", "),S.brokeNote||""].filter(Boolean).join(", ");}
+function flags(){
+  const f=[], pr=[];
+  if(S.hasInstr==="Y") pr.push(`instruction from ${instrText()}`);
+  if(S.bolted==="No"||S.bolted==="Part") pr.push(S.bolted==="No"?"not bolted and torqued":"only part bolted and torqued");
+  if(idleRows().length>0) pr.push(`${idleTotal()} steel erector${idleTotal()===1?"":"s"} not working as steel erectors`);
+  if(pr.length) f.push(`PROBLEMS: ${pr.join("; ")}`);
+  if(S.hasBroke==="Y") f.push(`BROKEN MACHINE: ${brokeText()}`);
+  if(S.hasStop==="Y") f.push(`BLOCKAGE: ${S.stopWhy||"?"}, ${String(S.stopHours||"?").replace(",",".")} h lost, ${S.stopMen||"?"} men, by ${S.stopWho||"?"}`);
+  if(S.hasMissing==="Y"){const ms=S.marks.filter(m=>m.m.trim());f.push(`WRONG, DAMAGED OR MISSING MEMBERS: ${ms.map(m=>m.m.trim().toUpperCase()+" "+m.p.toLowerCase()).join(", ")}`);}
+  return f;
+}
+const WHEN_EN={Day:"all day",AM:"morning",PM:"afternoon"};
+function report(){
+  const L=[], late=S.date!==today()?` (sent ${dmy(today())})`:"", pm=S.mode==="PM";
+  const num=v=>String(v||"").replace(",",".");
+  L.push(`*BLACK HAT ${pm?"EVENING":"MORNING"} REPORT*`);
+  L.push(`${dmy(S.date)}${late} | ${SITE.project} | ${S.name||"?"}`); L.push("");
+  const F=pm?flags():(idleRows().length?[`PROBLEMS: ${idleTotal()} steel erector${idleTotal()===1?"":"s"} not working as steel erectors`]:[]);
+  L.push("*FLAGS*"); if(F.length) F.forEach(x=>L.push(`! ${x}`)); else L.push("No flags"); L.push("");
+  if(pm){ const st=outTot(isSteel), dk=outTot(isDeck), o=t=>`${t.pcs} pcs, ${Math.round(t.kg)} kg (${Math.round(t.kg/10)/100} T)`;
+    L.push("*OUTPUT*"); L.push(`*Steel installed: ${S.steelYN==="Yes"?o(st):S.steelYN==="No"?"none today":"not stated"}*`); L.push(`*Decking installed: ${S.deckYN==="Yes"?o(dk):S.deckYN==="No"?"none today":"not stated"}*`);
+    L.push(`Bolted and torqued: ${S.bolted||"not stated"}`);
+    L.push(""); }
+  const total=S.crew.filter(live).reduce((a,c)=>a+parseInt(c.n),0);
+  L.push(`*CREW: ${total} people*`);
+  teamCos().forEach(co=>{const l=S.crew.filter(c=>c.co===co&&live(c)); if(!l.length) return; L.push(`${coName(co)} ${l.reduce((a,c)=>a+parseInt(c.n),0)}${pm?" ("+((S.coH||{})[co]?num(S.coH[co])+" h":"hours not stated")+")":""}: ${l.map(c=>`${c.n} ${tradeName(c)}`).join(", ")}`);});
+  if((S.alsoAs||[]).length) L.push(`Black hat also working as: ${S.alsoAs.join(", ")}`);
+  L.push(`By trade: ${Object.entries(tradeTotals()).map(([k,v])=>v+" "+k).join(", ")}`);
+  L.push("");
+  if(idleRows().length){ L.push(`*NOT WORKING AS STEEL ERECTORS: ${idleTotal()}*`);
+    idleRows().forEach(x=>{const c=crewOf(x.c); L.push(`- ${c?c.co:"?"}: ${x.n}, ${x.r==="Other"&&x.note?x.note:x.r}, used as ${String(x.as).toLowerCase()}, ${WHEN_EN[x.when]||"?"}`);}); L.push(""); }
+  if(!pm) return (L.join("\n").trim()+(S.comments&&S.comments.trim()?`\n\n*COMMENTS*\n${S.comments.trim()}`:""));
+  L.push("*WORK DONE*");
+  S.work.filter(w=>w.area||w.act).forEach((w,i)=>{
+    const who=w.who.map(id=>crewOf(id)).filter(c=>c&&parseInt((w.whoN||{})[c.id])>0).map(c=>`${(w.whoN||{})[c.id]||"?"} ${coName(c.co)} ${tradeName(c)}`).join(", ");
+    const res=(isDeck(w.act)||isSteel(w.act))?`${w.pcs} pcs, ${num(w.w)} kg`:`${w.done||"not stated"}`;
+    L.push(`${i+1}. ${w.area==="Other"?(w.areaO||"Other"):w.area}, ${w.act}, ${WHEN_EN[w.when]||w.when}`); L.push(`   Who: ${who}`); L.push(`   Done: ${res}`);});
+  L.push("");
+  L.push("*PROBLEMS*");
+  L.push(S.hasMissing==="Y"?`Missing or wrong members: ${S.marks.filter(m=>m.m.trim()).map(m=>m.m.trim().toUpperCase()+" "+m.p.toLowerCase()).join(", ")}`:`Missing or wrong members: ${S.hasMissing==="N/A"?"N/A":"none"}`);
+  L.push(S.hasBroke==="Y"?`Broken machine: ${brokeText()}`:`Broken machine: no`);
+  L.push(S.hasStop==="Y"?`Blockage: ${S.stopWhy}, ${num(S.stopHours)} h lost, ${S.stopMen} men, by ${S.stopWho}`:`Blockage: no`);
+  L.push(S.hasInstr==="Y"?`Instruction: ${instrText()}`:`Instruction: none`);
+  L.push("");
+  L.push("*TOMORROW I NEED*");
+  L.push(S.permitYN==="Yes"?`*PERMITS FOR TOMORROW: ${(S.permits||[]).join(", ")}${S.permitNote?" ("+S.permitNote+")":""}*`:`Permits for tomorrow: ${S.permitYN==="No"?"none needed":"not stated"}`);
+  const tm=(S.tomorrow||[]).map(x=>x==="More people"&&moreRows().length?`More people (${moreRows().map(m=>m.n+" "+m.job).join(", ")})`:x);
+  L.push(tm.length?tm.join(", "):"not stated"); if(S.needArea&&tm.length&&!tm.includes("Nothing")) L.push(`Where: ${S.needArea}`);
+  if(S.comments&&S.comments.trim()){L.push(""); L.push("*COMMENTS*"); L.push(S.comments.trim());}
+  return L.join("\n").trim();
+}
+function clearMiss(el){if(!el)return; el.classList.remove("miss"); el.querySelectorAll(":scope > .missmsg").forEach(x=>x.remove()); updateMissBar();}
+function missList(){return [...document.querySelectorAll(".f.miss,.line.miss")].filter(x=>x.offsetParent!==null).sort((x,y)=>x.getBoundingClientRect().top-y.getBoundingClientRect().top);}
+function updateMissBar(){const n=missList().length; const bar=$("#missBar"); bar.hidden=!n; if(n) $("#nextMiss").textContent=`${n} ${tr(n===1?"item missing":"items missing")}: ${tr("tap to go to the next")}`;}
+function goNextMiss(){const l=missList(); if(!l.length){updateMissBar();return;} const below=l.find(x=>x.getBoundingClientRect().top>120)||l[0]; below.scrollIntoView({block:"center"});}
+
+/* live status per step and the welcome screen */
+const SEC={1:/^(name|crew|grp|machines|alsoAs)/,2:/^(steelYN|deckYN|work|bolted|reached|whyNot)/,3:/^(hasMissing|marks|hasBroke|broke|hasStop|stop|hasInstr|instr)/,4:/^(tomorrow|needArea|more|permit)/};
+function progress(){
+  outSum(); const p=problems(); let done=0;
+  for(const i of [1,2,3,4]){const n=p.filter(([k])=>SEC[i].test(k)).length; const el=document.getElementById("st"+i); if(!el) continue;
+    if(n){el.className="st todo";el.textContent=tr("To do");} else {el.className="st ok";el.textContent=`\u2713 ${tr("Done")}`;done++;}}
+  $("#checkBtn").textContent=tr("Check and send");
+}
+function schedProgress(){clearTimeout(schedProgress.h);schedProgress.h=setTimeout(progress,250);}
+function openWelcome(){
+  const sh=$("#sheet");
+  const st=[["Pick your language","English, Română or Polski, at the top."],["Morning: tap Morning","Fill in your crew by company and how many. Check and send."],["Evening: tap Evening","Your morning crew is already there. Fill in the work done, problems and tomorrow. Check and send."],["Send the report","Choose WhatsApp and the site manager."]];
+  sh.innerHTML=`<header><h2>${tr("Black Hat Daily Report")}</h2></header><div class="inner welcome">
+    <div class="langs" style="margin-top:0">${[["en","English"],["ro","Română"],["pl","Polski"]].map(([c,l])=>`<button data-lang="${c}" aria-pressed="${lang===c}">${l}</button>`).join("")}</div>
+    <p style="font-size:18px;font-weight:600;margin:4px 0">${tr("Two reports a day, sent to the site manager on WhatsApp: morning crew and evening work.")}</p>
+    ${st.map(([t,d],i)=>`<div class="bigstep"><span class="n">${i+1}</span><div><b>${tr(t)}</b><p>${tr(d)}</p></div></div>`).join("")}
+    <div class="steps3" style="font-weight:700">${tr("A stop or an accident: phone the site manager at once. Do not wait for the evening.")}</div>
+    <button class="big go" id="startBtn">${tr("Start")}</button></div>`;
+  sh.hidden=false; sh.scrollTop=0;
+}
+async function shareReport(b){
+  S.sentDone=true; save();
+  const txt=report();
+  try{ if(navigator.share){ await navigator.share({text:txt}); b.textContent=tr("Sent? If not, press again"); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  copyReport(b);
+}
+function check(){
+  const filled=S.crew.filter(c=>c.co&&c.job); if(filled.length===1) S.work.forEach(w=>{if(!w.who.length&&(w.area||w.act)) w.who=[filled[0].id];});
+  document.querySelectorAll(".f.miss,.line.miss").forEach(x=>x.classList.remove("miss")); document.querySelectorAll(".missmsg").forEach(x=>x.remove()); document.querySelectorAll(".missbox").forEach(x=>x.classList.remove("missbox"));
+  const p=problems(); const sh=$("#sheet");
+  if(p.length){
+    p.forEach(([k,label])=>{const [a,id,part]=k.split(":"); const el=id?document.querySelector(`[data-${a}="${id}"]`):document.querySelector(`[data-f="${k}"]`); if(!el) return;
+      el.classList.add("miss"); const extra=k.split(":")[3]; if(part==="hown"&&extra){const inp=el.querySelector(`[data-whon="${id}|${extra}"]`); inp?.closest(".whorow")?.classList.add("missbox");} else if(part) el.querySelector(".who")?.classList.add("missbox");
+      const m=document.createElement("div"); m.className="missmsg"; m.textContent=tr(label); const anchor=el.querySelector(":scope > label, :scope > .lh"); if(anchor) anchor.after(m); else el.prepend(m);});
+    updateMissBar();
+    sh.innerHTML=`<header><button id="closeSheet">${tr("Back")}</button><h2>${tr("Not complete yet")}</h2></header><div class="inner">
+      <div class="problems">${p.length}: ${tr("Fill in these items. They are marked red on the form.")}<ul>${p.map(([k,l])=>`<li>${esc(tr(l))}</li>`).join("")}</ul></div>
+      <button class="big alt" id="closeSheet">${tr("Back to the form")}</button></div>`;
+  } else {
+    if(S.mode==="AM") saveMorning(); else saveLast(); const F=S.mode==="AM"?(idleRows().length>0?[`${idleTotal()} steel erector${idleTotal()===1?"":"s"} not working as steel erectors: ${idleText()}`]:[]):flags();
+    sh.innerHTML=`<header><button id="closeSheet">${tr("Back")}</button><h2>${tr("Ready to send")}</h2></header><div class="inner">
+      <div class="steps3"><ol><li>${tr("Press Send the report.")}</li><li>${tr("Choose WhatsApp, then the site manager.")}</li><li>${tr("Press Send.")}</li></ol></div>
+      ${F.length?`<div class="problems" style="font-weight:700">${tr("Flags for the site manager")}<ul>${F.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><div style="font-weight:500;margin-top:6px">${tr("Stops and incidents: phone the site manager now as well.")}</div></div>`:`<div class="steps3" style="color:var(--ok);font-weight:700">${tr("No flags today.")}</div>`}
+      <button class="big go" id="shareBtn">${tr("Send the report")}</button>
+      ${lang!=="en"?`<div style="font-size:14px;color:var(--muted)">${tr("The report goes to the site manager in English. What you typed stays as you wrote it.")}</div>`:""}
+      <button class="big alt" id="copyBtn">${tr("Or copy it as text")}</button>
+      <pre class="report" id="reportText"></pre></div>`;
+    $("#reportText").textContent=report();
+  }
+  sh.hidden=false; sh.scrollTop=0;
+}
+function copyReport(b){
+  S.sentDone=true; save();
+  const txt=report();
+  const ok=()=>{b.textContent=tr("Copied. Now paste in WhatsApp");};
+  const fail=()=>{const r=document.createRange();r.selectNodeContents($("#reportText"));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent=tr("Text selected: press Copy on your phone");};
+  try{navigator.clipboard.writeText(txt).then(ok,fail);}catch(e){fail();}
+}
+function openRestore(){
+  const sh=$("#sheet");
+  sh.innerHTML=`<header><button id="closeSheet">${tr("Back")}</button><h2>${tr("Fill in from an old report")}</h2></header><div class="inner">
+   <div class="steps3">${tr("In WhatsApp, press and hold one of your old reports, Copy. Then press and hold in the box below and Paste.")}</div>
+   <div class="f"><textarea id="oldReport" style="min-height:200px" placeholder="${tr("Paste here")}"></textarea></div>
+   <button class="big go" id="doRestore">${tr("Fill in my details")}</button></div>`;
+  sh.hidden=false;
+}
+function doRestore(){
+  const t=$("#oldReport").value; const g=re=>{const m=t.match(re);return m?m[1].trim():"";};
+  let n=0; const set=(k,v)=>{if(v){S[k]=v;n++;}};
+  set("name",g(/Name:\s*(.*)/));
+  const mt=g(/Machines:\s*(.*)/); if(mt&&mt!=="none"){S.mach={};mt.split(",").forEach(x=>{const m=x.trim().match(/^(\d+) (.+)$/);if(m&&MACHINES.includes(m[2])){S.mach[m[2]]=m[1];n++;}});} else if(mt==="none"){S.noMach="No machines today";}
+  const crew=[...t.matchAll(/^\s+(CSK|MBMN|LNW|LCK|Other) (.+?): (\d+)(?: x ([\d.]+) h)?\s*$/gm)].map(m=>({id:uid(),co:m[1],job:m[2],n:m[3],h:m[4]||""}));
+  if(crew.length){S.crew=crew;n+=crew.length;}
+  const work=[...t.matchAll(/^\s+\d+\. (.+?) \| (.+?) \| (.*?) \| (all day|morning|afternoon)\s*$/gm)].map(m=>{const w=newWork();w.area=m[1];w.act=m[2];w.when={"all day":"Day",morning:"AM",afternoon:"PM"}[m[4]];
+    w.who=m[3].split(" + ").map(x=>S.crew.find(c=>`${c.co} ${c.job}`===x.trim())).filter(Boolean).map(c=>c.id);return w;});
+  if(work.length){S.work=work;n+=work.length;}
+  save(); $("#sheet").hidden=true; render(); toast(n?`${n} ${tr("details filled in")}`:tr("Nothing found: paste a whole report"));
+}
+document.querySelectorAll("[data-v],option").forEach(el=>{if(el.dataset.v&&el.dataset.v.includes("Sisk"))el.dataset.v=el.dataset.v.replace(/Sisk/g,MC); if(el.tagName==="OPTION"&&el.value.includes("Sisk"))el.value=el.value.replace(/Sisk/g,MC);});
+$("#siteLine").textContent=`${SITE.company}, ${SITE.project}`;
+{const nm=String(SITE.ownShort||SITE.company||"CSK").trim(); [$("#ownCoChip"),...document.querySelectorAll(".ownCo")].forEach(oc=>{if(!oc)return; oc.dataset.v=nm; oc.textContent=nm; oc.setAttribute("data-dyn","");});}
+if(SETTINGS_BROKEN){const d=document.createElement("div");d.style.cssText="background:#B42318;color:#fff;padding:14px 16px;font-weight:700;font-size:16px";d.textContent="Settings file has a mistake. Open settings.js and check the quote marks, commas and brackets. Do not use this form until it is fixed.";document.body.prepend(d);}
+load(); const mf=morningFill(); applyLang(); render(); if(mf) setTimeout(()=>toast(tr("This morning's crew is filled in. Change it if anyone left or came.")),600);
+let seen=null; try{seen=localStorage.getItem("csk-bh-seen");}catch(e){} if(!seen&&!S.name) openWelcome();
+
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script></body></html>
